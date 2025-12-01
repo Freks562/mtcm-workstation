@@ -1,0 +1,52 @@
+<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Admin</title>
+<style>
+body{background:#0b1220;color:#e5e7eb;font-family:system-ui}.wrap{max-width:980px;margin:24px auto;padding:0 16px}
+.card{background:#0007;border:1px solid #1f2a44;border-radius:16px;padding:16px;margin:12px 0}
+input,textarea{background:#0b1220;color:#e5e7eb;border:1px solid #2b3b5f;border-radius:10px;padding:8px;width:100%}
+button{background:#0b1220;color:#CFAE2A;border:1px solid #2b3b5f;border-radius:10px;padding:8px 12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.small{color:#94a3b8}
+</style></head><body>
+<div class="wrap">
+  <h2>Admin</h2>
+  <div id="me" class="small">Loading…</div>
+
+  <div class="card">
+    <h3>Settings</h3>
+    <div class="grid">
+      <div><label>ALLOWED_EMAILS</label><input id="ALLOWED_EMAILS"/></div>
+      <div><label>OWNER_EMAILS</label><input id="OWNER_EMAILS"/></div>
+      <div><label>WEATHER_DEFAULT_CITY</label><input id="WEATHER_DEFAULT_CITY"/></div>
+      <div><label>WEATHER_DEFAULT_UNITS</label><input id="WEATHER_DEFAULT_UNITS" value="metric"/></div>
+      <div><label>WEATHER_ALERT_PRECIP_MM</label><input id="WEATHER_ALERT_PRECIP_MM" type="number" value="10"/></div>
+    </div>
+    <button id="save">Save</button>
+    <span id="msg" class="small"></span>
+  </div>
+
+  <div class="card">
+    <h3>Owner actions</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button id="pubcss" type="button">Publish CSS</button>
+      <button id="pubfull" type="button">Publish Full</button>
+      <input id="rotHours" placeholder="token hours" style="max-width:120px"/>
+      <button id="rot" type="button">Rotate Ops Token</button>
+    </div>
+    <pre id="logs" style="margin-top:10px;white-space:pre-wrap"></pre>
+    <div id="reveal" class="small" style="margin-top:8px;color:#CFAE2A"></div>
+  </div>
+
+  <form class="card" method="post" action="/logout"><button>Logout</button></form>
+  <a href="/">← Home</a>
+</div>
+<script>
+async function getMe(){ const r=await fetch('/api/admin/me'); if(!r.ok){ location.href='/signin'; return; } const j=await r.json(); document.getElementById('me').textContent = j.user.email + (j.roles.owner?' (Owner)':'' ); }
+async function loadCfg(){ const r=await fetch('/api/admin/config'); const j=await r.json(); const c=j.config||{}; for(const k of ['ALLOWED_EMAILS','OWNER_EMAILS','WEATHER_DEFAULT_CITY','WEATHER_DEFAULT_UNITS','WEATHER_ALERT_PRECIP_MM']){ if(document.getElementById(k)) document.getElementById(k).value = c[k] || ''; } }
+document.getElementById('save').onclick=async()=>{ const body={}; for(const k of ['ALLOWED_EMAILS','OWNER_EMAILS','WEATHER_DEFAULT_CITY','WEATHER_DEFAULT_UNITS','WEATHER_ALERT_PRECIP_MM']) body[k]=document.getElementById(k).value; const r=await fetch('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); document.getElementById('msg').textContent=(r.ok?'Saved':'Failed'); };
+document.getElementById('pubcss').onclick=async()=>{ const r=await fetch('/api/admin/publish-css',{method:'POST'}); const j=await r.json(); document.getElementById('logs').textContent=(j.log||j.error||JSON.stringify(j)); };
+document.getElementById('pubfull').onclick=async()=>{ const r=await fetch('/api/admin/publish-full',{method:'POST'}); const j=await r.json(); document.getElementById('logs').textContent=(j.log||j.error||JSON.stringify(j)); };
+document.getElementById('rot').onclick=async()=>{ const hours = Number(document.getElementById('rotHours').value||'0')||undefined; const r=await fetch('/api/admin/ops/rotate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hours})}); const j=await r.json(); if (j.revealToken){ document.getElementById('reveal').textContent='One-time token: '+j.revealToken+' (expires '+j.exp+')'; } };
+getMe(); loadCfg();
+</script>
+</body></html>

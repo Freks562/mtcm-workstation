@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>MTCM · Weather</title>
+  <style>
+    body{background:#0b1220;color:#e5e7eb;font-family:system-ui}
+    .wrap{max-width:920px;margin:0 auto;padding:24px}
+    .h1{color:#CFAE2A;font-weight:700;font-size:1.6rem}
+    .card{background:rgba(0,0,0,.45);border:1px solid #1f2a44;border-radius:16px;padding:16px;margin:12px 0}
+    input,select{width:100%;background:#0b1220;border:1px solid #2b3b5f;color:#e5e7eb;border-radius:12px;padding:10px;box-sizing:border-box}
+    button{background:#0b1220;color:#CFAE2A;border:1px solid #2b3b5f;border-radius:12px;padding:10px 14px}
+    .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .small{color:#94a3b8}
+    .hero{font-size:2.0rem;font-weight:700}
+  </style>
+</head>
+<body>
+<header class="wrap"><a href="/" class="small" style="color:#94a3b8;text-decoration:none">← Home</a></header>
+<main class="wrap">
+  <h1 class="h1">Weather Dashboard</h1>
+  <div id="bookmarks" class="card" style="display:none"></div>
+  <div class="card">
+    <div class="grid">
+      <div><label class="small">City</label><input id="city" placeholder="Washington DC"/></div>
+      <div>
+        <label class="small">Units</label>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+          <button id="unitC" type="button">°C</button>
+          <button id="unitF" type="button">°F</button>
+        </div>
+        <select id="units"><option value="metric">metric (°C)</option><option value="imperial">imperial (°F)</option></select>
+      </div>
+      <div>
+        <label class="small">Alert if precip &gt; (mm)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="alertmm" type="number" min="0" step="0.1" value="10" style="max-width:140px"/>
+          <button id="saveAlert">Save Alert</button>
+        </div>
+        <div class="small">Days exceeding this will be highlighted and a banner shown.</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button id="btn">Get Weather</button>
+      <button id="bm">Bookmark this city</button>
+      <button id="geo">📍 Use My Location</button>
+      <span id="msg" class="small"></span>
+    </div>
+  </div>
+  <div id="alert" class="card" style="display:none"></div>
+  <div id="out" class="card"></div>
+  <div id="forecast" class="card"></div>
+  <div class="card"><canvas id="chart" height="140"></canvas></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+async function cfg(){ const r=await fetch('/api/weather/config'); return r.ok? r.json():{city:'Washington DC',units:'metric',alertMm:10}; }
+async function wx(city,units,lat=null,lon=null){ const q = lat!=null? `lat=${lat}&lon=${lon}&units=${units}` : `city=${encodeURIComponent(city)}&units=${units}`; const r = await fetch(`/api/weather?${q}`); if(!r.ok) throw new Error(await r.text()); return r.json(); }
+async function fc(city,units,lat=null,lon=null){ const q = lat!=null? `lat=${lat}&lon=${lon}&units=${units}` : `city=${encodeURIComponent(city)}&units=${units}`; const r = await fetch(`/api/forecast?${q}`); if(!r.ok) throw new Error(await r.text()); return r.json(); }
+function render(w){ const unit = w.units==='imperial'?'°F':'°C'; document.getElementById('out').innerHTML = `<div class="hero">${w.city}</div><div class="small">${w.description}</div><div style="display:flex;gap:16px;align-items:center;margin-top:10px"><img src="https://openweathermap.org/img/wn/${w.icon}@2x.png"/><div><div>Temperature: <b>${w.temp}${unit}</b></div><div>Humidity: ${w.humidity}%</div><div>Wind: ${w.wind}${w.units==='imperial'?' mph':' m/s'}</div></div></div>`; }
+let chart=null, alertThresholdMm=10, geoCoord=null;
+function fmt(d){ const t=new Date(d); return isNaN(t)? d : t.toLocaleDateString(); }
+function banner(f){ const el=document.getElementById('alert'); const hits=(f.days||[]).filter(d => (d.precip||0) > alertThresholdMm); if (!hits.length){ el.style.display='none'; el.innerHTML=''; return; } el.style.display='block'; el.innerHTML = `<div class="h1" style="font-size:1.1rem">⚠️ Weather Alerts</div><div class="small">Heavy precip: ${hits.map(d=>fmt(d.date)+' ('+(d.precip||0)+'mm)').join(', ')}</div>`; }
+function renderForecast(f){ const el=document.getElementById('forecast'); if(!f||!f.days||!f.days.length){ el.innerHTML="<div class='small'>No forecast.</div>"; return; } const rows=f.days.map(d=>`<div style="display:flex;gap:12px;align-items:center;padding:6px 0;background:${(d.precip||0)>alertThresholdMm?'#3b1f1f':'transparent'}"><div style="width:120px" class="small">${fmt(d.date)}</div><img src="https://openweathermap.org/img/wn/${d.icon}.png"/><div style="flex:1">Min/Max: <b>${d.min.toFixed(0)}</b> / <b>${d.max.toFixed(0)}</b></div><div class="small" style="min-width:160px">Precip: ${(d.precip||0).toFixed(1)} mm · Clouds: ${d.clouds||0}%</div></div>`).join(""); el.innerHTML = `<div class="h1" style="font-size:1.1rem">5-Day Forecast</div>${rows}`; const ctx=document.getElementById('chart'); const labels=f.days.map(d=>fmt(d.date)); const dataMax=f.days.map(d=>d.max); const dataMin=f.days.map(d=>d.min); const precip=f.days.map(d=>d.precip||0); const clouds=f.days.map(d=>d.clouds||0); const tunit=(f && f.units)==="imperial"?"°F":"°C"; if(chart) chart.destroy(); chart=new Chart(ctx,{data:{labels,datasets:[{type:"line",label:"Max",data:dataMax,yAxisID:"y"},{type:"line",label:"Min",data:dataMin,yAxisID:"y"},{type:"bar",label:"Precip (mm)",data:precip,yAxisID:"y1"},{type:"line",label:"Clouds (%)",data:clouds,yAxisID:"y2"}]},options:{responsive:true,plugins:{legend:{display:true}},scales:{y:{beginAtZero:false,title:{display:true,text:"Temp ("+tunit+")"}},y1:{beginAtZero:true,position:"right",title:{display:true,text:"mm"}},y2:{beginAtZero:true,position:"right",grid:{drawOnChartArea:false},min:0,max:100,title:{display:true,text:"% Clouds"}}}}); }
+function getBM(){try{return JSON.parse(localStorage.getItem("wx_bookmarks")||"[]");}catch{return []}} function setBM(a){localStorage.setItem("wx_bookmarks", JSON.stringify(a||[]));}
+function renderBM(){ const wrap=document.getElementById("bookmarks"); const a=getBM(); if(!a.length){ wrap.style.display="none"; wrap.innerHTML=""; return; } wrap.style.display="block"; wrap.innerHTML = `<div class="h1" style="font-size:1.1rem">Bookmarks</div>` + a.map((c,i)=>`<div style="display:inline-flex;gap:6px;margin:4px 6px 0 0;align-items:center"><button onclick="useBM('${c.replace(/'/g,"\\'")}')">${c}</button><button onclick="delBM(${i})" title="Remove">x</button></div>`).join("");}
+function addBM(city){ const a=getBM(); if(!a.includes(city)) { a.push(city); setBM(a); renderBM(); } } function delBM(i){ const a=getBM(); a.splice(i,1); setBM(a); renderBM(); } async function useBM(city){ document.getElementById("city").value=city; geoCoord=null; await doFetch(); }
+document.getElementById('bm').onclick=()=>{ const c=document.getElementById('city').value.trim(); if(c) addBM(c); };
+document.getElementById('unitC').onclick=()=>{ document.getElementById('units').value='metric'; geoCoord=null; doFetch(); };
+document.getElementById('unitF').onclick=()=>{ document.getElementById('units').value='imperial'; geoCoord=null; doFetch(); };
+document.getElementById('saveAlert').onclick=()=>{ alertThresholdMm=parseFloat(document.getElementById('alertmm').value)||10; localStorage.setItem('wx_alert_mm', String(alertThresholdMm)); doFetch(); };
+document.getElementById('btn').addEventListener('click', ()=>{ geoCoord=null; doFetch(); });
+document.getElementById('geo').onclick=()=>{ if (!navigator.geolocation){ document.getElementById('msg').textContent='Geolocation not supported.'; return; } document.getElementById('msg').textContent='Locating...'; navigator.geolocation.getCurrentPosition(async pos=>{ geoCoord = { lat: pos.coords.latitude, lon: pos.coords.longitude }; try{ const units=document.getElementById('units').value||'metric'; const w=await (await fetch(`/api/weather?lat=${geoCoord.lat}&lon=${geoCoord.lon}&units=${units}`)).json(); render(w); const f=await (await fetch(`/api/forecast?lat=${geoCoord.lat}&lon=${geoCoord.lon}&units=${units}`)).json(); renderForecast(f); banner(f); if (w && w.city){ document.getElementById('city').value = w.city; } document.getElementById('msg').textContent=''; }catch(e){ document.getElementById('msg').textContent='Failed: '+(e.message||e); } }, ()=>{ document.getElementById('msg').textContent='Location blocked.'; }); };
+async function doFetch(){ const city=document.getElementById('city').value.trim()||'Washington DC'; const units=document.getElementById('units').value||'metric'; document.getElementById('msg').textContent='Loading...'; try{ const w= await wx(city,units); render(w); const f= await fc(city,units); renderForecast(f); banner(f); document.getElementById('msg').textContent=''; }catch(e){ document.getElementById('msg').textContent='Failed: '+(e.message||e); } }
+(async ()=>{ renderBM(); const c = await cfg(); document.getElementById('city').value = c.city||'Washington DC'; document.getElementById('units').value = c.units||'metric'; alertThresholdMm = Number(localStorage.getItem('wx_alert_mm')||c.alertMm||10); document.getElementById('alertmm').value = String(alertThresholdMm); doFetch(); })();
+</script>
+</body></html>
