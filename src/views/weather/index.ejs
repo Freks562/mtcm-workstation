@@ -1,0 +1,42 @@
+<%- include('../layout', { body: `
+  <div class="container">
+    <div class="weather-header">
+      <h1>Weather Dashboard</h1>
+      <p>Get current weather and forecasts with geolocation support</p>
+    </div>
+    
+    <div class="weather-controls">
+      <div class="search-box">
+        <input type="text" id="city-search" placeholder="Enter city name..." class="input">
+        <button id="search-btn" class="btn btn-primary">Search</button>
+        <button id="locate-btn" class="btn btn-outline">📍 Use My Location</button>
+      </div>
+    </div>
+    
+    <div class="weather-grid">
+      <div class="weather-current" id="current-weather">
+        <div class="weather-placeholder">
+          <p>Search for a city or use your location to see weather</p>
+        </div>
+      </div>
+      
+      <div class="weather-forecast" id="forecast">
+        <h3>5-Day Forecast</h3>
+        <div class="forecast-grid" id="forecast-grid">
+          <div class="weather-placeholder">
+            <p>Forecast will appear here</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="weather-bookmarks">
+      <h3>Saved Locations</h3>
+      <div class="bookmarks-grid" id="bookmarks-grid">
+        ${bookmarks.length > 0 ? bookmarks.map(b => '<div class="bookmark-card" data-id="' + b.id + '" data-lat="' + b.lat + '" data-lon="' + b.lon + '"><span class="bookmark-name">' + b.name + '</span><button class="btn btn-sm btn-danger delete-bookmark">×</button></div>').join('') : '<p class="no-bookmarks">No saved locations yet</p>'}
+      </div>
+    </div>
+  </div>
+  
+  <script src="/js/weather.js"></script>
+`}) %>

@@ -1,0 +1,43 @@
+<header class="header">
+  <div class="container">
+    <nav class="nav">
+      <a href="/" class="logo">
+        <span class="logo-text">MTCM</span>
+        <span class="logo-badge">SDVOSB</span>
+      </a>
+      
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/federal">Federal</a></li>
+        <li><a href="/contact">Contact</a></li>
+        <% if (isAuthenticated) { %>
+          <li><a href="/weather">Weather</a></li>
+          <li><a href="/dashboard">Dashboard</a></li>
+          <% if (user && user.isAdmin) { %>
+            <li><a href="/admin">Admin</a></li>
+          <% } %>
+        <% } %>
+      </ul>
+      
+      <div class="nav-auth">
+        <% if (isAuthenticated && user) { %>
+          <div class="user-menu">
+            <% if (user.photo) { %>
+              <img src="<%= user.photo %>" alt="<%= user.displayName %>" class="user-avatar">
+            <% } %>
+            <span class="user-name"><%= user.displayName %></span>
+            <a href="/auth/logout" class="btn btn-outline btn-sm">Logout</a>
+          </div>
+        <% } else { %>
+          <a href="/auth/login" class="btn btn-primary btn-sm">Login</a>
+        <% } %>
+      </div>
+      
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </nav>
+  </div>
+</header>

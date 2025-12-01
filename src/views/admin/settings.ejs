@@ -1,0 +1,60 @@
+<%- include('../layout', { body: `
+  <div class="container">
+    <div class="page-header">
+      <h1>System Settings</h1>
+      <a href="/admin" class="btn btn-outline">← Back to Admin</a>
+    </div>
+    
+    <div class="settings-grid">
+      <div class="settings-section">
+        <h3>Environment</h3>
+        <div class="setting-row">
+          <span class="setting-label">Mode</span>
+          <span class="setting-value badge badge-${settings.environment}">${settings.environment}</span>
+        </div>
+      </div>
+      
+      <div class="settings-section">
+        <h3>Services Status</h3>
+        
+        <div class="setting-row">
+          <span class="setting-label">Redis</span>
+          <span class="setting-value">${settings.redisConfigured ? '<span class="status-ok">✓ Configured</span>' : '<span class="status-warn">⚠ Not configured</span>'}</span>
+        </div>
+        
+        <div class="setting-row">
+          <span class="setting-label">Google OAuth</span>
+          <span class="setting-value">${settings.googleAuthConfigured ? '<span class="status-ok">✓ Configured</span>' : '<span class="status-warn">⚠ Not configured</span>'}</span>
+        </div>
+        
+        <div class="setting-row">
+          <span class="setting-label">reCAPTCHA</span>
+          <span class="setting-value">${settings.recaptchaConfigured ? '<span class="status-ok">✓ Configured</span>' : '<span class="status-warn">⚠ Not configured</span>'}</span>
+        </div>
+        
+        <div class="setting-row">
+          <span class="setting-label">Weather API</span>
+          <span class="setting-value">${settings.weatherApiConfigured ? '<span class="status-ok">✓ Configured</span>' : '<span class="status-warn">⚠ Not configured</span>'}</span>
+        </div>
+      </div>
+      
+      <div class="settings-section">
+        <h3>Health Endpoints</h3>
+        <div class="endpoints-list">
+          <code>/health</code> - Basic health check<br>
+          <code>/health/ready</code> - Readiness probe<br>
+          <code>/health/live</code> - Liveness probe<br>
+          <code>/health/detailed</code> - Detailed status
+        </div>
+      </div>
+      
+      <div class="settings-section">
+        <h3>Deployment Hooks</h3>
+        <div class="endpoints-list">
+          <code>POST /health/drain</code> - Prepare for shutdown<br>
+          <code>POST /health/activate</code> - Activate after deployment
+        </div>
+      </div>
+    </div>
+  </div>
+`}) %>

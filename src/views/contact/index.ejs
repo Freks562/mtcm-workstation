@@ -1,0 +1,81 @@
+<%- include('../layout', { body: `
+  <div class="container">
+    <section class="page-header">
+      <h1>Contact Us</h1>
+      <p>Get in touch with our federal sales team</p>
+    </section>
+    
+    <div class="contact-grid">
+      <div class="contact-form-wrapper">
+        <form id="contact-form" class="contact-form">
+          <div class="form-group">
+            <label for="name">Name *</label>
+            <input type="text" id="name" name="name" required class="input" placeholder="Your full name">
+          </div>
+          
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required class="input" placeholder="your.email@agency.gov">
+          </div>
+          
+          <div class="form-group">
+            <label for="company">Organization</label>
+            <input type="text" id="company" name="company" class="input" placeholder="Agency or company name">
+          </div>
+          
+          <div class="form-group">
+            <label for="subject">Subject *</label>
+            <input type="text" id="subject" name="subject" required class="input" placeholder="How can we help?">
+          </div>
+          
+          <div class="form-group">
+            <label for="message">Message *</label>
+            <textarea id="message" name="message" required class="input textarea" rows="5" placeholder="Tell us about your requirements..."></textarea>
+          </div>
+          
+          <!-- Honeypot field - hidden from users -->
+          <div class="form-group" style="display:none;">
+            <label for="website">Website</label>
+            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+          </div>
+          
+          ${typeof recaptchaSiteKey !== 'undefined' && recaptchaSiteKey ? '<div class="g-recaptcha" data-sitekey="' + recaptchaSiteKey + '"></div>' : ''}
+          
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-lg">Send Message</button>
+          </div>
+          
+          <div id="form-message" class="form-message"></div>
+        </form>
+      </div>
+      
+      <div class="contact-info">
+        <div class="info-card">
+          <h3>Federal Sales</h3>
+          <p>Contact our team for federal procurement inquiries</p>
+        </div>
+        
+        <div class="info-card">
+          <h3>Certifications</h3>
+          <ul>
+            <li>SDVOSB Certified</li>
+            <li>VOSB Verified</li>
+          </ul>
+        </div>
+        
+        <div class="info-card">
+          <h3>Contract Vehicles</h3>
+          <ul>
+            <li>GSA Schedule</li>
+            <li>NASA SEWP V</li>
+            <li>CIO-SP3</li>
+          </ul>
+          <a href="/federal/vehicles" class="link">View all vehicles →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  ${typeof recaptchaSiteKey !== 'undefined' && recaptchaSiteKey ? '<script src="https://www.google.com/recaptcha/api.js" async defer></script>' : ''}
+  <script src="/js/contact.js"></script>
+`}) %>
