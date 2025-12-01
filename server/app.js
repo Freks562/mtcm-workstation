@@ -81,7 +81,16 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     callbackURL: process.env.GOOGLE_REDIRECT_URI || '/auth/google/callback',
   }, (accessToken, refreshToken, profile, done) => {
     const email = profile.emails && profile.emails[0] && profile.emails[0].value;
-    const allowedEmails = (process.env.ALLOWED_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
+    const allowedEmailsStr = process.env.ALLOWED_EMAILS || '';
+    const allowedEmails = allowedEmailsStr
+      .split(',')
+      .map(e => e.trim().toLowerCase())
+      .filter(e => e.length > 0);
+    
+    // Reject if no allowlist configured or email not in allowlist
+    if (allowedEmails.length === 0) {
+      return done(null, false, { message: 'No allowed emails configured' });
+    }
     
     if (email && allowedEmails.includes(email.toLowerCase())) {
       return done(null, {
@@ -148,7 +157,6 @@ app.get('/', (req, res) => {
 });
 
 app.get('/signin', (req, res) => {
-  const csrfToken = res.locals.csrfToken || '';
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
