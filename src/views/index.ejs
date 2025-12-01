@@ -1,85 +1,106 @@
-<%- include('layout', { body: ` 
-  <section class="hero">
-    <div class="container">
-      <div class="hero-content">
-        <div class="hero-badge">SDVOSB Certified</div>
-        <h1>Mountaintop Technology Comm</h1>
-        <p class="hero-subtitle">Secure federal technology solutions from a Service-Disabled Veteran-Owned Small Business</p>
-        <div class="hero-actions">
-          <a href="/federal" class="btn btn-primary btn-lg">View Capabilities</a>
-          <a href="/contact" class="btn btn-outline btn-lg">Contact Us</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="<%= typeof description !== 'undefined' ? description : 'MTCM Portal - Secure SDVOSB Web Application' %>">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('partials/header') %>
+  
+  <main class="main-content">
+    <section class="hero">
+      <div class="container">
+        <div class="hero-content">
+          <div class="hero-badge">SDVOSB Certified</div>
+          <h1>Mountaintop Technology Comm</h1>
+          <p class="hero-subtitle">Secure federal technology solutions from a Service-Disabled Veteran-Owned Small Business</p>
+          <div class="hero-actions">
+            <a href="/federal" class="btn btn-primary btn-lg">View Capabilities</a>
+            <a href="/contact" class="btn btn-outline btn-lg">Contact Us</a>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="features">
-    <div class="container">
-      <h2 class="section-title">Federal Technology Solutions</h2>
-      
-      <div class="feature-grid">
-        <div class="feature-card">
-          <div class="feature-icon">🔒</div>
-          <h3>Cybersecurity</h3>
-          <p>Comprehensive security assessments, compliance, and protection services for federal agencies.</p>
-        </div>
+    <section class="features">
+      <div class="container">
+        <h2 class="section-title">Federal Technology Solutions</h2>
         
-        <div class="feature-card">
-          <div class="feature-icon">☁️</div>
-          <h3>Cloud Solutions</h3>
-          <p>FedRAMP authorized cloud migration, management, and optimization services.</p>
-        </div>
-        
-        <div class="feature-card">
-          <div class="feature-icon">💻</div>
-          <h3>IT Services</h3>
-          <p>Full-stack IT solutions including development, infrastructure, and support.</p>
-        </div>
-        
-        <div class="feature-card">
-          <div class="feature-icon">📊</div>
-          <h3>Consulting</h3>
-          <p>Strategic IT modernization and digital transformation consulting.</p>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <h3>Cybersecurity</h3>
+            <p>Comprehensive security assessments, compliance, and protection services for federal agencies.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">☁️</div>
+            <h3>Cloud Solutions</h3>
+            <p>FedRAMP authorized cloud migration, management, and optimization services.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">💻</div>
+            <h3>IT Services</h3>
+            <p>Full-stack IT solutions including development, infrastructure, and support.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Consulting</h3>
+            <p>Strategic IT modernization and digital transformation consulting.</p>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="vehicles">
-    <div class="container">
-      <h2 class="section-title">Contract Vehicles</h2>
-      <p class="section-subtitle">Simplified acquisition through established federal contract vehicles</p>
-      
-      <div class="vehicle-grid">
-        <div class="vehicle-card">
-          <h3>GSA Schedule</h3>
-          <p>Multiple Award Schedule (MAS) for IT and professional services</p>
+    <section class="vehicles">
+      <div class="container">
+        <h2 class="section-title">Contract Vehicles</h2>
+        <p class="section-subtitle">Simplified acquisition through established federal contract vehicles</p>
+        
+        <div class="vehicle-grid">
+          <div class="vehicle-card">
+            <h3>GSA Schedule</h3>
+            <p>Multiple Award Schedule (MAS) for IT and professional services</p>
+          </div>
+          
+          <div class="vehicle-card">
+            <h3>NASA SEWP V</h3>
+            <p>Solutions for Enterprise-Wide Procurement GWAC</p>
+          </div>
+          
+          <div class="vehicle-card">
+            <h3>CIO-SP3</h3>
+            <p>IT services and solutions for all federal agencies</p>
+          </div>
         </div>
         
-        <div class="vehicle-card">
-          <h3>NASA SEWP V</h3>
-          <p>Solutions for Enterprise-Wide Procurement GWAC</p>
-        </div>
-        
-        <div class="vehicle-card">
-          <h3>CIO-SP3</h3>
-          <p>IT services and solutions for all federal agencies</p>
+        <div class="cta-center">
+          <a href="/federal/vehicles" class="btn btn-primary">View All Vehicles</a>
         </div>
       </div>
-      
-      <div class="cta-center">
-        <a href="/federal/vehicles" class="btn btn-primary">View All Vehicles</a>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="cta">
-    <div class="container">
-      <div class="cta-content">
-        <h2>Ready to Get Started?</h2>
-        <p>Contact our federal sales team to discuss your requirements.</p>
-        <a href="/contact" class="btn btn-light btn-lg">Contact Federal Sales</a>
+    <section class="cta">
+      <div class="container">
+        <div class="cta-content">
+          <h2>Ready to Get Started?</h2>
+          <p>Contact our federal sales team to discuss your requirements.</p>
+          <a href="/contact" class="btn btn-light btn-lg">Contact Federal Sales</a>
+        </div>
       </div>
-    </div>
-  </section>
-`}) %>
+    </section>
+  </main>
+  
+  <%- include('partials/footer') %>
+  
+  <script src="/js/main.js"></script>
+</body>
+</html>

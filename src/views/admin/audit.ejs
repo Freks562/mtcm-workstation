@@ -1,45 +1,82 @@
-<%- include('../layout', { body: `
-  <div class="container">
-    <div class="page-header">
-      <h1>Audit Logs</h1>
-      <a href="/admin" class="btn btn-outline">← Back to Admin</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Audit Logs - MTCM Portal">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+  
+  <main class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1>Audit Logs</h1>
+        <a href="/admin" class="btn btn-outline">← Back to Admin</a>
+      </div>
+      
+      <div class="filters">
+        <form method="GET" class="filter-form">
+          <select name="action" class="input">
+            <option value="">All Actions</option>
+            <option value="LOGIN" <%= filters.action === 'LOGIN' ? 'selected' : '' %>>Login</option>
+            <option value="LOGOUT" <%= filters.action === 'LOGOUT' ? 'selected' : '' %>>Logout</option>
+            <option value="CONTACT_SUBMIT" <%= filters.action === 'CONTACT_SUBMIT' ? 'selected' : '' %>>Contact Submit</option>
+            <option value="LEAD_SUBMIT" <%= filters.action === 'LEAD_SUBMIT' ? 'selected' : '' %>>Lead Submit</option>
+            <option value="CONTENT_PUBLISH" <%= filters.action === 'CONTENT_PUBLISH' ? 'selected' : '' %>>Content Publish</option>
+          </select>
+          <button type="submit" class="btn btn-primary">Filter</button>
+        </form>
+      </div>
+      
+      <div class="audit-table-wrapper">
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Action</th>
+              <th>User</th>
+              <th>Details</th>
+              <th>IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (logs.length > 0) { %>
+              <% logs.forEach(function(log) { %>
+                <tr>
+                  <td><%= new Date(log.timestamp).toLocaleString() %></td>
+                  <td><span class="badge badge-<%= log.action.toLowerCase() %>"><%= log.action %></span></td>
+                  <td><%= log.userEmail %></td>
+                  <td><%= log.details %></td>
+                  <td><%= log.ip %></td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr><td colspan="5" class="no-data">No audit logs found</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="pagination">
+        <% if (pagination.hasPrev) { %>
+          <a href="?page=<%= pagination.page - 1 %><%= filters.action ? '&action=' + filters.action : '' %>" class="btn btn-outline">← Previous</a>
+        <% } %>
+        <span class="pagination-info">Page <%= pagination.page %> of <%= pagination.totalPages %> (<%= pagination.total %> total)</span>
+        <% if (pagination.hasNext) { %>
+          <a href="?page=<%= pagination.page + 1 %><%= filters.action ? '&action=' + filters.action : '' %>" class="btn btn-outline">Next →</a>
+        <% } %>
+      </div>
     </div>
-    
-    <div class="filters">
-      <form method="GET" class="filter-form">
-        <select name="action" class="input">
-          <option value="">All Actions</option>
-          <option value="LOGIN" ${filters.action === 'LOGIN' ? 'selected' : ''}>Login</option>
-          <option value="LOGOUT" ${filters.action === 'LOGOUT' ? 'selected' : ''}>Logout</option>
-          <option value="CONTACT_SUBMIT" ${filters.action === 'CONTACT_SUBMIT' ? 'selected' : ''}>Contact Submit</option>
-          <option value="LEAD_SUBMIT" ${filters.action === 'LEAD_SUBMIT' ? 'selected' : ''}>Lead Submit</option>
-          <option value="CONTENT_PUBLISH" ${filters.action === 'CONTENT_PUBLISH' ? 'selected' : ''}>Content Publish</option>
-        </select>
-        <button type="submit" class="btn btn-primary">Filter</button>
-      </form>
-    </div>
-    
-    <div class="audit-table-wrapper">
-      <table class="audit-table">
-        <thead>
-          <tr>
-            <th>Timestamp</th>
-            <th>Action</th>
-            <th>User</th>
-            <th>Details</th>
-            <th>IP</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${logs.length > 0 ? logs.map(log => '<tr><td>' + new Date(log.timestamp).toLocaleString() + '</td><td><span class="badge badge-' + log.action.toLowerCase() + '">' + log.action + '</span></td><td>' + log.userEmail + '</td><td>' + log.details + '</td><td>' + log.ip + '</td></tr>').join('') : '<tr><td colspan="5" class="no-data">No audit logs found</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-    
-    <div class="pagination">
-      ${pagination.hasPrev ? '<a href="?page=' + (pagination.page - 1) + (filters.action ? '&action=' + filters.action : '') + '" class="btn btn-outline">← Previous</a>' : ''}
-      <span class="pagination-info">Page ${pagination.page} of ${pagination.totalPages} (${pagination.total} total)</span>
-      ${pagination.hasNext ? '<a href="?page=' + (pagination.page + 1) + (filters.action ? '&action=' + filters.action : '') + '" class="btn btn-outline">Next →</a>' : ''}
-    </div>
-  </div>
-`}) %>
+  </main>
+  
+  <%- include('../partials/footer') %>
+  
+  <script src="/js/main.js"></script>
+</body>
+</html>

@@ -11,6 +11,7 @@ const passport = require('passport');
 
 const logger = require('./services/logger');
 const { createRateLimiter } = require('./middleware/rateLimiter');
+const { csrfExclude } = require('./middleware/csrf');
 const { configurePassport } = require('./config/passport');
 const { sessionConfig } = require('./config/session');
 
@@ -71,6 +72,9 @@ app.use(passport.session());
 
 // Rate limiting
 app.use(createRateLimiter());
+
+// CSRF protection (exclude health and API endpoints)
+app.use(csrfExclude(['/health', '/auth/google', '/federal/kit', '/federal/vehicles', '/federal/certifications', '/federal/naics']));
 
 // Make user available to all views
 app.use((req, res, next) => {

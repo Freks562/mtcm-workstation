@@ -1,60 +1,105 @@
-<%- include('../layout', { body: `
-  <div class="container">
-    <div class="page-header">
-      <h1>System Settings</h1>
-      <a href="/admin" class="btn btn-outline">← Back to Admin</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="System Settings - MTCM Portal">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+  
+  <main class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1>System Settings</h1>
+        <a href="/admin" class="btn btn-outline">← Back to Admin</a>
+      </div>
+      
+      <div class="settings-grid">
+        <div class="settings-section">
+          <h3>Environment</h3>
+          <div class="setting-row">
+            <span class="setting-label">Mode</span>
+            <span class="setting-value badge badge-<%= settings.environment %>"><%= settings.environment %></span>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <h3>Services Status</h3>
+          
+          <div class="setting-row">
+            <span class="setting-label">Redis</span>
+            <span class="setting-value">
+              <% if (settings.redisConfigured) { %>
+                <span class="status-ok">✓ Configured</span>
+              <% } else { %>
+                <span class="status-warn">⚠ Not configured</span>
+              <% } %>
+            </span>
+          </div>
+          
+          <div class="setting-row">
+            <span class="setting-label">Google OAuth</span>
+            <span class="setting-value">
+              <% if (settings.googleAuthConfigured) { %>
+                <span class="status-ok">✓ Configured</span>
+              <% } else { %>
+                <span class="status-warn">⚠ Not configured</span>
+              <% } %>
+            </span>
+          </div>
+          
+          <div class="setting-row">
+            <span class="setting-label">reCAPTCHA</span>
+            <span class="setting-value">
+              <% if (settings.recaptchaConfigured) { %>
+                <span class="status-ok">✓ Configured</span>
+              <% } else { %>
+                <span class="status-warn">⚠ Not configured</span>
+              <% } %>
+            </span>
+          </div>
+          
+          <div class="setting-row">
+            <span class="setting-label">Weather API</span>
+            <span class="setting-value">
+              <% if (settings.weatherApiConfigured) { %>
+                <span class="status-ok">✓ Configured</span>
+              <% } else { %>
+                <span class="status-warn">⚠ Not configured</span>
+              <% } %>
+            </span>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <h3>Health Endpoints</h3>
+          <div class="endpoints-list">
+            <code>/health</code> - Basic health check<br>
+            <code>/health/ready</code> - Readiness probe<br>
+            <code>/health/live</code> - Liveness probe<br>
+            <code>/health/detailed</code> - Detailed status
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <h3>Deployment Hooks</h3>
+          <div class="endpoints-list">
+            <code>POST /health/drain</code> - Prepare for shutdown<br>
+            <code>POST /health/activate</code> - Activate after deployment
+          </div>
+        </div>
+      </div>
     </div>
-    
-    <div class="settings-grid">
-      <div class="settings-section">
-        <h3>Environment</h3>
-        <div class="setting-row">
-          <span class="setting-label">Mode</span>
-          <span class="setting-value badge badge-${settings.environment}">${settings.environment}</span>
-        </div>
-      </div>
-      
-      <div class="settings-section">
-        <h3>Services Status</h3>
-        
-        <div class="setting-row">
-          <span class="setting-label">Redis</span>
-          <span class="setting-value">${settings.redisConfigured ? '<span class="status-ok">✓ Configured</span>' : '<span class="status-warn">⚠ Not configured</span>'}</span>
-        </div>
-        
-        <div class="setting-row">
-          <span class="setting-label">Google OAuth</span>
-          <span class="setting-value">${settings.googleAuthConfigured ? '<span class="status-ok">✓ Configured</span>' : '<span class="status-warn">⚠ Not configured</span>'}</span>
-        </div>
-        
-        <div class="setting-row">
-          <span class="setting-label">reCAPTCHA</span>
-          <span class="setting-value">${settings.recaptchaConfigured ? '<span class="status-ok">✓ Configured</span>' : '<span class="status-warn">⚠ Not configured</span>'}</span>
-        </div>
-        
-        <div class="setting-row">
-          <span class="setting-label">Weather API</span>
-          <span class="setting-value">${settings.weatherApiConfigured ? '<span class="status-ok">✓ Configured</span>' : '<span class="status-warn">⚠ Not configured</span>'}</span>
-        </div>
-      </div>
-      
-      <div class="settings-section">
-        <h3>Health Endpoints</h3>
-        <div class="endpoints-list">
-          <code>/health</code> - Basic health check<br>
-          <code>/health/ready</code> - Readiness probe<br>
-          <code>/health/live</code> - Liveness probe<br>
-          <code>/health/detailed</code> - Detailed status
-        </div>
-      </div>
-      
-      <div class="settings-section">
-        <h3>Deployment Hooks</h3>
-        <div class="endpoints-list">
-          <code>POST /health/drain</code> - Prepare for shutdown<br>
-          <code>POST /health/activate</code> - Activate after deployment
-        </div>
-      </div>
-    </div>
-  </div>
-`}) %>
+  </main>
+  
+  <%- include('../partials/footer') %>
+  
+  <script src="/js/main.js"></script>
+</body>
+</html>
