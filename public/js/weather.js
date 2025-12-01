@@ -385,14 +385,36 @@ function saveBookmarks() {
 }
 
 function renderBookmarks() {
-  bookmarksList.innerHTML = bookmarks.length === 0
-    ? '<p class="empty-state">No bookmarked cities yet</p>'
-    : bookmarks.map(city => `
-        <div class="bookmark-chip" onclick="selectBookmark('${city.replace(/'/g, "\\'")}')">
-          <span>${city}</span>
-          <button class="remove-bookmark" onclick="event.stopPropagation(); removeBookmark('${city.replace(/'/g, "\\'")}')">×</button>
-        </div>
-      `).join('');
+  bookmarksList.innerHTML = '';
+  
+  if (bookmarks.length === 0) {
+    const emptyState = document.createElement('p');
+    emptyState.className = 'empty-state';
+    emptyState.textContent = 'No bookmarked cities yet';
+    bookmarksList.appendChild(emptyState);
+    return;
+  }
+  
+  bookmarks.forEach(city => {
+    const chip = document.createElement('div');
+    chip.className = 'bookmark-chip';
+    
+    const citySpan = document.createElement('span');
+    citySpan.textContent = city;
+    chip.appendChild(citySpan);
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-bookmark';
+    removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeBookmark(city);
+    });
+    chip.appendChild(removeBtn);
+    
+    chip.addEventListener('click', () => selectBookmark(city));
+    bookmarksList.appendChild(chip);
+  });
 }
 
 function selectBookmark(city) {
@@ -429,7 +451,3 @@ function hideWeatherSections() {
   forecastSection.classList.remove('visible');
   chartSection.classList.remove('visible');
 }
-
-// Make functions available globally for inline handlers
-window.selectBookmark = selectBookmark;
-window.removeBookmark = removeBookmark;
