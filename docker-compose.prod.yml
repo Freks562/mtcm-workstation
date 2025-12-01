@@ -1,0 +1,63 @@
+# MTCM Portal - Production Docker Compose
+# Usage: docker-compose -f docker-compose.prod.yml up -d
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mtcm-portal
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Required - set these in .env or override
+      - SESSION_SECRET=${SESSION_SECRET}
+      - SESSION_SECURE=1
+      - ALLOWED_EMAILS=${ALLOWED_EMAILS}
+      # Google OAuth
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      # Weather
+      - OWM_API_KEY=${OWM_API_KEY}
+      - WEATHER_DEFAULT_CITY=${WEATHER_DEFAULT_CITY:-Washington DC}
+      - WEATHER_DEFAULT_UNITS=${WEATHER_DEFAULT_UNITS:-metric}
+      - WEATHER_ALERT_PRECIP_MM=${WEATHER_ALERT_PRECIP_MM:-10}
+      # Optional
+      - REDIS_URL=${REDIS_URL:-}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-}
+    volumes:
+      - portal-data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # Optional: Redis for rate limiting and session store
+  redis:
+    image: redis:7-alpine
+    container_name: mtcm-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  portal-data:
+  redis-data:

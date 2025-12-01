@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | MTCM Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">
+      <a href="/">MTCM Portal</a>
+    </div>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/federal">Federal</a>
+      <a href="/lead">Request Info</a>
+      <a href="/contact" class="active">Contact</a>
+      <a href="/weather">Weather</a>
+      <% if (user) { %>
+        <a href="/admin">Admin</a>
+        <a href="/signout">Sign Out</a>
+      <% } else { %>
+        <a href="/signin">Sign In</a>
+      <% } %>
+    </div>
+  </nav>
+
+  <main class="container">
+    <h1>Contact Us</h1>
+    <p class="lead">Have a question or comment? We'd love to hear from you.</p>
+
+    <% if (success) { %>
+      <div class="alert alert-success">
+        <p>Your message has been sent. We'll respond as soon as possible.</p>
+      </div>
+    <% } %>
+
+    <% if (error) { %>
+      <div class="alert alert-error">
+        <p><%= error %></p>
+      </div>
+    <% } %>
+
+    <form id="contact-form" class="form-card" method="POST" action="/contact">
+      <div class="form-group">
+        <label for="name">Full Name <span class="required">*</span></label>
+        <input type="text" id="name" name="name" required placeholder="John Smith">
+      </div>
+      
+      <div class="form-group">
+        <label for="email">Email Address <span class="required">*</span></label>
+        <input type="email" id="email" name="email" required placeholder="john@example.com">
+      </div>
+      
+      <div class="form-group">
+        <label for="subject">Subject</label>
+        <input type="text" id="subject" name="subject" placeholder="What is this regarding?">
+      </div>
+      
+      <!-- Honeypot field - hidden from humans -->
+      <div class="hp-field" aria-hidden="true">
+        <label for="company2">Leave this empty</label>
+        <input type="text" id="company2" name="company2" tabindex="-1" autocomplete="off">
+      </div>
+      
+      <div class="form-group">
+        <label for="message">Message <span class="required">*</span></label>
+        <textarea id="message" name="message" rows="6" required placeholder="Your message..."></textarea>
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Send Message</button>
+      <span id="form-status"></span>
+    </form>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; <%= new Date().getFullYear() %> MTCM Portal</p>
+  </footer>
+
+  <script>
+    document.getElementById('contact-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const status = document.getElementById('form-status');
+      const submitBtn = form.querySelector('button[type="submit"]');
+      
+      submitBtn.disabled = true;
+      status.textContent = 'Sending...';
+      
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+      
+      try {
+        const response = await fetch('/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.ok) {
+          form.reset();
+          status.textContent = '✓ Message sent! We\'ll respond soon.';
+          status.className = 'status-success';
+        } else if (response.status === 429) {
+          status.textContent = '✗ Too many submissions. Please try again later.';
+          status.className = 'status-error';
+        } else {
+          status.textContent = '✗ ' + (result.error || 'Failed to send');
+          status.className = 'status-error';
+        }
+      } catch (err) {
+        status.textContent = '✗ Network error. Please try again.';
+        status.className = 'status-error';
+      }
+      
+      submitBtn.disabled = false;
+    });
+  </script>
+</body>
+</html>

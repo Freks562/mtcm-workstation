@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | MTCM Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">
+      <a href="/">MTCM Portal</a>
+    </div>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/federal">Federal</a>
+      <a href="/lead">Request Info</a>
+      <a href="/contact">Contact</a>
+      <a href="/weather" class="active">Weather</a>
+      <% if (user) { %>
+        <a href="/admin">Admin</a>
+        <a href="/signout">Sign Out</a>
+      <% } else { %>
+        <a href="/signin">Sign In</a>
+      <% } %>
+    </div>
+  </nav>
+
+  <main class="container">
+    <h1>Weather Dashboard</h1>
+    
+    <!-- Alert Banner -->
+    <div id="alert-banner" class="alert alert-warning" style="display: none;">
+      <strong>⚠️ Weather Alert:</strong> <span id="alert-message"></span>
+    </div>
+
+    <!-- Search and Controls -->
+    <div class="weather-controls">
+      <div class="search-group">
+        <input type="text" id="city-input" placeholder="Enter city name..." class="search-input">
+        <button id="search-btn" class="btn">Search</button>
+        <button id="geolocate-btn" class="btn btn-secondary" title="Use my location">📍</button>
+      </div>
+      <div class="bookmarks">
+        <span>Bookmarks:</span>
+        <div id="bookmark-list"></div>
+        <button id="add-bookmark-btn" class="btn btn-sm" title="Add current city">+ Add</button>
+      </div>
+    </div>
+
+    <!-- Current Weather -->
+    <section class="weather-current">
+      <div id="current-weather" class="weather-card">
+        <p class="loading">Loading weather data...</p>
+      </div>
+    </section>
+
+    <!-- 5-Day Forecast -->
+    <section class="weather-forecast">
+      <h2>5-Day Forecast</h2>
+      <div id="forecast-cards" class="forecast-grid">
+        <p class="loading">Loading forecast...</p>
+      </div>
+    </section>
+
+    <!-- Charts -->
+    <section class="weather-charts">
+      <h2>Forecast Charts</h2>
+      <div class="charts-grid">
+        <div class="chart-container">
+          <h3>Temperature (Min/Max)</h3>
+          <canvas id="temp-chart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Precipitation & Cloud Cover</h3>
+          <canvas id="precip-chart"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; <%= new Date().getFullYear() %> MTCM Portal</p>
+  </footer>
+
+  <script>
+    // Weather Dashboard Script
+    let weatherConfig = { city: 'Washington DC', units: 'metric', alertMm: 10 };
+    let currentCity = '';
+    let tempChart = null;
+    let precipChart = null;
+    
+    // Load bookmarks from localStorage
+    function getBookmarks() {
+      try {
+        return JSON.parse(localStorage.getItem('weatherBookmarks') || '[]');
+      } catch { return []; }
+    }
+    
+    function saveBookmarks(bookmarks) {
+      localStorage.setItem('weatherBookmarks', JSON.stringify(bookmarks));
+    }
+    
+    function renderBookmarks() {
+      const container = document.getElementById('bookmark-list');
+      const bookmarks = getBookmarks();
+      container.innerHTML = bookmarks.map(city => 
+        `<button class="bookmark-btn" data-city="${city}">${city}</button>`
+      ).join('');
+      
+      container.querySelectorAll('.bookmark-btn').forEach(btn => {
+        btn.addEventListener('click', () => loadWeather(btn.dataset.city));
+      });
+    }
+    
+    // Load config
+    async function loadConfig() {
+      try {
+        const res = await fetch('/api/weather/config');
+        weatherConfig = await res.json();
+        currentCity = weatherConfig.city;
+        document.getElementById('city-input').placeholder = `Enter city (default: ${weatherConfig.city})`;
+      } catch (err) {
+        console.error('Failed to load config:', err);
+      }
+    }
+    
+    // Load current weather
+    async function loadWeather(city) {
+      const container = document.getElementById('current-weather');
+      currentCity = city || weatherConfig.city;
+      
+      try {
+        const res = await fetch(`/api/weather?city=${encodeURIComponent(currentCity)}`);
+        const data = await res.json();
+        
+        if (data.error) {
+          container.innerHTML = `<p class="error">${data.error}</p>`;
+          return;
+        }
+        
+        const temp = Math.round(data.main.temp);
+        const unit = weatherConfig.units === 'metric' ? '°C' : '°F';
+        const icon = data.weather[0].icon;
+        
+        container.innerHTML = `
+          <div class="current-main">
+            <img src="https://openweathermap.org/img/wn/${icon}@4x.png" alt="${data.weather[0].description}" class="weather-icon-lg">
+            <div class="current-temp">
+              <span class="temp-value">${temp}${unit}</span>
+              <span class="temp-desc">${data.weather[0].description}</span>
+            </div>
+          </div>
+          <div class="current-details">
+            <h2>${data.name}, ${data.sys.country}</h2>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="label">Feels Like</span>
+                <span class="value">${Math.round(data.main.feels_like)}${unit}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Humidity</span>
+                <span class="value">${data.main.humidity}%</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Wind</span>
+                <span class="value">${data.wind.speed} ${weatherConfig.units === 'metric' ? 'm/s' : 'mph'}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Pressure</span>
+                <span class="value">${data.main.pressure} hPa</span>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Load forecast after current weather
+        loadForecast(currentCity);
+      } catch (err) {
+        container.innerHTML = `<p class="error">Failed to load weather: ${err.message}</p>`;
+      }
+    }
+    
+    // Load forecast
+    async function loadForecast(city) {
+      const container = document.getElementById('forecast-cards');
+      const alertBanner = document.getElementById('alert-banner');
+      const alertMessage = document.getElementById('alert-message');
+      
+      try {
+        const res = await fetch(`/api/weather/forecast?city=${encodeURIComponent(city)}`);
+        const data = await res.json();
+        
+        if (data.error) {
+          container.innerHTML = `<p class="error">${data.error}</p>`;
+          return;
+        }
+        
+        const unit = weatherConfig.units === 'metric' ? '°C' : '°F';
+        
+        // Check for precipitation alerts
+        const highPrecipDays = data.daily.filter(d => d.precip > weatherConfig.alertMm);
+        if (highPrecipDays.length > 0) {
+          alertBanner.style.display = 'block';
+          alertMessage.textContent = `High precipitation expected: ${highPrecipDays.map(d => 
+            `${formatDate(d.date)} (${d.precip}mm)`
+          ).join(', ')}`;
+        } else {
+          alertBanner.style.display = 'none';
+        }
+        
+        // Render forecast cards
+        container.innerHTML = data.daily.map(day => `
+          <div class="forecast-card">
+            <div class="forecast-date">${formatDate(day.date)}</div>
+            <img src="https://openweathermap.org/img/wn/${day.icon}@2x.png" alt="${day.desc}" class="weather-icon">
+            <div class="forecast-temps">
+              <span class="temp-max">${Math.round(day.max)}${unit}</span>
+              <span class="temp-min">${Math.round(day.min)}${unit}</span>
+            </div>
+            <div class="forecast-desc">${day.desc}</div>
+            <div class="forecast-precip">💧 ${day.precip}mm</div>
+          </div>
+        `).join('');
+        
+        // Update charts
+        updateCharts(data.daily);
+      } catch (err) {
+        container.innerHTML = `<p class="error">Failed to load forecast: ${err.message}</p>`;
+      }
+    }
+    
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    
+    // Update charts with Chart.js
+    function updateCharts(daily) {
+      const labels = daily.map(d => formatDate(d.date));
+      const unit = weatherConfig.units === 'metric' ? '°C' : '°F';
+      
+      // Temperature chart
+      const tempCtx = document.getElementById('temp-chart').getContext('2d');
+      if (tempChart) tempChart.destroy();
+      
+      tempChart = new Chart(tempCtx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: `Max (${unit})`,
+              data: daily.map(d => d.max),
+              borderColor: '#e74c3c',
+              backgroundColor: 'rgba(231, 76, 60, 0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: `Min (${unit})`,
+              data: daily.map(d => d.min),
+              borderColor: '#3498db',
+              backgroundColor: 'rgba(52, 152, 219, 0.1)',
+              fill: true,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'top' } }
+        }
+      });
+      
+      // Precipitation & clouds chart
+      const precipCtx = document.getElementById('precip-chart').getContext('2d');
+      if (precipChart) precipChart.destroy();
+      
+      precipChart = new Chart(precipCtx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Precipitation (mm)',
+              data: daily.map(d => d.precip),
+              backgroundColor: 'rgba(52, 152, 219, 0.7)',
+              yAxisID: 'y'
+            },
+            {
+              label: 'Cloud Cover (%)',
+              data: daily.map(d => d.clouds),
+              type: 'line',
+              borderColor: '#95a5a6',
+              backgroundColor: 'rgba(149, 165, 166, 0.2)',
+              fill: true,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'top' } },
+          scales: {
+            y: { type: 'linear', position: 'left', title: { display: true, text: 'Precipitation (mm)' } },
+            y1: { type: 'linear', position: 'right', min: 0, max: 100, title: { display: true, text: 'Cloud Cover (%)' }, grid: { drawOnChartArea: false } }
+          }
+        }
+      });
+    }
+    
+    // Geolocation
+    async function geolocate() {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser');
+        return;
+      }
+      
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const res = await fetch(`/api/weather/geolocate?lat=${latitude}&lon=${longitude}`);
+          const data = await res.json();
+          if (data.name) {
+            document.getElementById('city-input').value = data.name;
+            loadWeather(data.name);
+          }
+        } catch (err) {
+          alert('Failed to get weather for your location');
+        }
+      }, (err) => {
+        alert('Unable to get your location: ' + err.message);
+      });
+    }
+    
+    // Event listeners
+    document.getElementById('search-btn').addEventListener('click', () => {
+      const city = document.getElementById('city-input').value.trim();
+      if (city) loadWeather(city);
+    });
+    
+    document.getElementById('city-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const city = e.target.value.trim();
+        if (city) loadWeather(city);
+      }
+    });
+    
+    document.getElementById('geolocate-btn').addEventListener('click', geolocate);
+    
+    document.getElementById('add-bookmark-btn').addEventListener('click', () => {
+      if (!currentCity) return;
+      const bookmarks = getBookmarks();
+      if (!bookmarks.includes(currentCity)) {
+        bookmarks.push(currentCity);
+        saveBookmarks(bookmarks);
+        renderBookmarks();
+      }
+    });
+    
+    // Initialize
+    async function init() {
+      await loadConfig();
+      renderBookmarks();
+      loadWeather();
+    }
+    
+    init();
+  </script>
+</body>
+</html>

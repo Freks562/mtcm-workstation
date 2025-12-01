@@ -1,0 +1,48 @@
+# Render Blueprint
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: mtcm-portal
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm ci
+    startCommand: node server/app.js
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SESSION_SECURE
+        value: "1"
+      - key: ALLOWED_EMAILS
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        sync: false
+      - key: OWM_API_KEY
+        sync: false
+      - key: WEATHER_DEFAULT_CITY
+        value: "Washington DC"
+      - key: WEATHER_DEFAULT_UNITS
+        value: metric
+      - key: WEATHER_ALERT_PRECIP_MM
+        value: "10"
+      # Optional
+      - key: REDIS_URL
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false

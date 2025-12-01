@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | MTCM Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">
+      <a href="/">MTCM Portal</a>
+    </div>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/federal">Federal</a>
+      <a href="/lead">Request Info</a>
+      <a href="/contact">Contact</a>
+      <a href="/weather">Weather</a>
+      <% if (user) { %>
+        <a href="/admin">Admin</a>
+        <a href="/signout">Sign Out</a>
+      <% } else { %>
+        <a href="/signin">Sign In</a>
+      <% } %>
+    </div>
+  </nav>
+
+  <main class="container error-page">
+    <div class="error-content">
+      <h1><%= title %></h1>
+      <p><%= message %></p>
+      <a href="/" class="btn">Return to Home</a>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; <%= new Date().getFullYear() %> MTCM Portal</p>
+  </footer>
+</body>
+</html>
