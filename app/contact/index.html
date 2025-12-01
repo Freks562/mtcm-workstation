@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Contact</title>
+<style>body{background:#0b1220;color:#e5e7eb;font-family:system-ui}.wrap{max-width:760px;margin:24px auto;padding:0 16px}.card{background:#0007;border:1px solid #1f2a44;border-radius:16px;padding:16px;margin:12px 0}
+input,textarea{background:#0b1220;color:#e5e7eb;border:1px solid #2b3b5f;border-radius:10px;padding:8px;width:100%;margin-bottom:12px;box-sizing:border-box}button{background:#0b1220;color:#CFAE2A;border:1px solid #2b3b5f;border-radius:10px;padding:8px 12px}label{display:block;margin-bottom:4px}</style>
+</head><body><div class="wrap">
+  <h2>Contact MTCM</h2>
+  <form class="card" method="post" action="/contact">
+    <input name="company2" style="display:none" tabindex="-1" autocomplete="off"/>
+    <div><label>Name</label><input name="name" required/></div>
+    <div><label>Organization</label><input name="org"/></div>
+    <div><label>Email</label><input name="email" type="email" required/></div>
+    <div><label>Phone</label><input name="phone"/></div>
+    <div><label>Message</label><textarea name="notes" rows="4"></textarea></div>
+    <button>Send</button>
+  </form>
+  <a href="/">← Home</a>
+</div></body></html>
