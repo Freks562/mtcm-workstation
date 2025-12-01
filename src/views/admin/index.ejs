@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Admin Dashboard - MTCM Portal">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+  
+  <main class="main-content">
+    <div class="container">
+      <div class="admin-header">
+        <h1>Admin Dashboard</h1>
+        <p>System administration and monitoring</p>
+      </div>
+      
+      <div class="admin-stats">
+        <div class="stat-card">
+          <div class="stat-value"><%= summary.totalLogs %></div>
+          <div class="stat-label">Total Audit Logs</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-value"><%= Object.keys(summary.actionCounts).length %></div>
+          <div class="stat-label">Action Types</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-value"><%= summary.topUsers.length %></div>
+          <div class="stat-label">Active Users</div>
+        </div>
+      </div>
+      
+      <div class="admin-grid">
+        <div class="admin-card">
+          <h3>📋 Audit Logs</h3>
+          <p>View system activity and security logs</p>
+          <a href="/admin/audit" class="btn btn-primary">View Logs</a>
+        </div>
+        
+        <div class="admin-card">
+          <h3>👥 Users</h3>
+          <p>Manage user accounts and permissions</p>
+          <a href="/admin/users" class="btn btn-primary">Manage Users</a>
+        </div>
+        
+        <div class="admin-card">
+          <h3>📨 Leads & Contacts</h3>
+          <p>View submitted leads and contact forms</p>
+          <a href="/admin/leads" class="btn btn-primary">View Leads</a>
+        </div>
+        
+        <% if (user.isOwner) { %>
+          <div class="admin-card admin-card-owner">
+            <h3>✏️ Content IDE</h3>
+            <p>Edit and publish content (Owner only)</p>
+            <a href="/admin/ide" class="btn btn-primary">Open IDE</a>
+          </div>
+        <% } %>
+        
+        <% if (user.isOwner) { %>
+          <div class="admin-card admin-card-owner">
+            <h3>⚙️ Settings</h3>
+            <p>System configuration (Owner only)</p>
+            <a href="/admin/settings" class="btn btn-primary">Settings</a>
+          </div>
+        <% } %>
+      </div>
+      
+      <div class="admin-section">
+        <h3>Recent Activity</h3>
+        <div class="action-summary">
+          <% Object.entries(summary.actionCounts).slice(0, 5).forEach(function([action, count]) { %>
+            <div class="action-item">
+              <span class="action-name"><%= action %></span>
+              <span class="action-count"><%= count %></span>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <%- include('../partials/footer') %>
+  
+  <script src="/js/main.js"></script>
+</body>
+</html>

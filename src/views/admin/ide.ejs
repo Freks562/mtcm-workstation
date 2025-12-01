@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Content IDE - MTCM Portal">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+  
+  <main class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1>Content IDE</h1>
+        <a href="/admin" class="btn btn-outline">← Back to Admin</a>
+      </div>
+      
+      <div class="ide-container">
+        <div class="ide-sidebar">
+          <h3>Content Types</h3>
+          <ul class="content-types">
+            <li class="active" data-type="page">Pages</li>
+            <li data-type="announcement">Announcements</li>
+            <li data-type="capability">Capabilities</li>
+            <li data-type="vehicle">Contract Vehicles</li>
+          </ul>
+        </div>
+        
+        <div class="ide-editor">
+          <div class="editor-header">
+            <input type="text" id="content-title" placeholder="Content Title" class="input">
+            <select id="content-status" class="input">
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
+          
+          <div class="editor-body">
+            <textarea id="content-editor" class="input textarea" rows="20" placeholder="Enter content here..."></textarea>
+          </div>
+          
+          <div class="editor-footer">
+            <button id="save-draft" class="btn btn-outline">Save Draft</button>
+            <button id="publish-content" class="btn btn-primary">Publish</button>
+          </div>
+        </div>
+        
+        <div class="ide-preview">
+          <h3>Preview</h3>
+          <div id="preview-content" class="preview-area">
+            <p class="preview-placeholder">Preview will appear here</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      const editor = document.getElementById('content-editor');
+      const preview = document.getElementById('preview-content');
+      const publishBtn = document.getElementById('publish-content');
+      
+      // Use textContent for safe preview to prevent XSS
+      editor.addEventListener('input', () => {
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'preview-rendered';
+        previewDiv.textContent = editor.value;
+        preview.innerHTML = '';
+        preview.appendChild(previewDiv);
+      });
+      
+      publishBtn.addEventListener('click', async () => {
+        const title = document.getElementById('content-title').value;
+        const content = editor.value;
+        const type = document.querySelector('.content-types .active').dataset.type;
+        
+        if (!title || !content) {
+          alert('Please enter title and content');
+          return;
+        }
+        
+        try {
+          const res = await fetch('/admin/publish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, content, type })
+          });
+          
+          const data = await res.json();
+          
+          if (data.success) {
+            alert('Content published successfully!');
+          } else {
+            alert('Error: ' + data.message);
+          }
+        } catch (err) {
+          alert('Failed to publish: ' + err.message);
+        }
+      });
+      
+      document.querySelectorAll('.content-types li').forEach(item => {
+        item.addEventListener('click', () => {
+          document.querySelectorAll('.content-types li').forEach(i => i.classList.remove('active'));
+          item.classList.add('active');
+        });
+      });
+    </script>
+  </main>
+  
+  <%- include('../partials/footer') %>
+  
+  <script src="/js/main.js"></script>
+</body>
+</html>

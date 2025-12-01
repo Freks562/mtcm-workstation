@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="User Management - MTCM Portal">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+  
+  <main class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1>User Management</h1>
+        <a href="/admin" class="btn btn-outline">← Back to Admin</a>
+      </div>
+      
+      <div class="users-table-wrapper">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Created</th>
+              <th>Last Login</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (users.length > 0) { %>
+              <% users.forEach(function(u) { %>
+                <tr>
+                  <td>
+                    <div class="user-cell">
+                      <% if (u.photo) { %>
+                        <img src="<%= u.photo %>" class="user-avatar-sm" alt="<%= u.displayName %>">
+                      <% } %>
+                      <span><%= u.displayName %></span>
+                    </div>
+                  </td>
+                  <td><%= u.email %></td>
+                  <td>
+                    <% if (u.isOwner) { %>
+                      <span class="badge badge-owner">Owner</span>
+                    <% } else if (u.isAdmin) { %>
+                      <span class="badge badge-admin">Admin</span>
+                    <% } else { %>
+                      <span class="badge badge-user">User</span>
+                    <% } %>
+                  </td>
+                  <td><%= new Date(u.createdAt).toLocaleDateString() %></td>
+                  <td><%= new Date(u.lastLogin).toLocaleString() %></td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr><td colspan="5" class="no-data">No users found</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+  
+  <%- include('../partials/footer') %>
+  
+  <script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Federal Capabilities - MTCM Portal">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+  
+  <main class="main-content">
+    <section class="page-header federal-header">
+      <div class="container">
+        <div class="hero-badge">SDVOSB Certified</div>
+        <h1>Federal Capabilities</h1>
+        <p>Comprehensive IT solutions for federal agencies</p>
+      </div>
+    </section>
+
+    <section class="capabilities">
+      <div class="container">
+        <h2 class="section-title">Our Capabilities</h2>
+        
+        <div class="capability-grid">
+          <% federalKit.capabilities.forEach(function(cap) { %>
+            <div class="capability-card">
+              <h3><%= cap.name %></h3>
+              <p><%= cap.description %></p>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </section>
+
+    <section class="certifications">
+      <div class="container">
+        <h2 class="section-title">Certifications</h2>
+        
+        <div class="cert-grid">
+          <% federalKit.certifications.forEach(function(cert) { %>
+            <div class="cert-card">
+              <h3><%= cert.name %></h3>
+              <p><%= cert.description %></p>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </section>
+
+    <section class="vehicles">
+      <div class="container">
+        <h2 class="section-title">Contract Vehicles</h2>
+        
+        <div class="vehicle-grid">
+          <% contractVehicles.forEach(function(v) { %>
+            <div class="vehicle-card">
+              <div class="vehicle-status <%= v.status %>"><%= v.status %></div>
+              <h3><%= v.name %></h3>
+              <p class="vehicle-fullname"><%= v.fullName %></p>
+              <p><%= v.description %></p>
+              <div class="vehicle-categories">
+                <% v.categories.forEach(function(c) { %>
+                  <span class="category-tag"><%= c %></span>
+                <% }); %>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </section>
+
+    <section class="naics">
+      <div class="container">
+        <h2 class="section-title">NAICS Codes</h2>
+        
+        <div class="naics-grid">
+          <% federalKit.naicsCodes.forEach(function(n) { %>
+            <div class="naics-card">
+              <span class="naics-code"><%= n.code %></span>
+              <span class="naics-desc"><%= n.description %></span>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="container">
+        <div class="cta-content">
+          <h2>Request a Quote</h2>
+          <p>Contact our federal sales team to discuss your requirements</p>
+          <a href="/contact" class="btn btn-light btn-lg">Contact Sales</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <%- include('../partials/footer') %>
+  
+  <script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Leads & Contacts - MTCM Portal">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+  
+  <main class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1>Leads & Contacts</h1>
+        <a href="/admin" class="btn btn-outline">← Back to Admin</a>
+      </div>
+      
+      <div class="tabs">
+        <button class="tab active" data-tab="leads">Federal Leads (<%= leads.length %>)</button>
+        <button class="tab" data-tab="contacts">Contact Forms (<%= contacts.length %>)</button>
+      </div>
+      
+      <div class="tab-content" id="leads-tab">
+        <h3>Federal Leads</h3>
+        <div class="leads-grid">
+          <% if (leads.length > 0) { %>
+            <% leads.forEach(function(lead) { %>
+              <div class="lead-card">
+                <div class="lead-header">
+                  <h4><%= lead.name %></h4>
+                  <span class="badge badge-<%= lead.status %>"><%= lead.status %></span>
+                </div>
+                <p class="lead-agency"><%= lead.agency %></p>
+                <p class="lead-interest"><%= lead.interest %></p>
+                <div class="lead-meta">
+                  <span><%= lead.email %></span>
+                  <span><%= new Date(lead.createdAt).toLocaleDateString() %></span>
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <p class="no-data">No leads yet</p>
+          <% } %>
+        </div>
+      </div>
+      
+      <div class="tab-content hidden" id="contacts-tab">
+        <h3>Contact Submissions</h3>
+        <div class="contacts-grid">
+          <% if (contacts.length > 0) { %>
+            <% contacts.forEach(function(contact) { %>
+              <div class="contact-card">
+                <div class="contact-header">
+                  <h4><%= contact.name %></h4>
+                  <span class="badge badge-<%= contact.status %>"><%= contact.status %></span>
+                </div>
+                <p class="contact-subject"><%= contact.subject %></p>
+                <p class="contact-message"><%= contact.message.substring(0, 150) %>...</p>
+                <div class="contact-meta">
+                  <span><%= contact.email %></span>
+                  <span><%= new Date(contact.createdAt).toLocaleDateString() %></span>
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <p class="no-data">No contact submissions yet</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+          tab.classList.add('active');
+          document.getElementById(tab.dataset.tab + '-tab').classList.remove('hidden');
+        });
+      });
+    </script>
+  </main>
+  
+  <%- include('../partials/footer') %>
+  
+  <script src="/js/main.js"></script>
+</body>
+</html>
