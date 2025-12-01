@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Dashboard</title>
+  <link rel="stylesheet" href="/css/weather.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>🌤️ Weather Dashboard</h1>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Error Message -->
+    <div id="error-message" class="error-message"></div>
+
+    <!-- Search Section -->
+    <section class="search-section">
+      <div class="search-form">
+        <input 
+          type="text" 
+          id="city-input" 
+          placeholder="Enter city name..."
+          aria-label="City name"
+        >
+        <select id="units-select" aria-label="Temperature units">
+          <option value="metric">Metric (°C)</option>
+          <option value="imperial">Imperial (°F)</option>
+        </select>
+        <button id="search-btn" class="btn btn-primary">Search</button>
+        <button id="location-btn" class="btn btn-secondary">📍 Use My Location</button>
+        <button id="bookmark-btn" class="btn btn-success">Bookmark City</button>
+      </div>
+    </section>
+
+    <!-- Bookmarks Section -->
+    <section class="bookmarks-section">
+      <h3>📌 Bookmarked Cities</h3>
+      <div id="bookmarks-list" class="bookmarks-list">
+        <p class="empty-state">No bookmarked cities yet</p>
+      </div>
+    </section>
+
+    <!-- Current Weather -->
+    <section id="current-weather" class="current-weather">
+      <div class="current-weather-header">
+        <div class="current-weather-location">
+          <h2 id="location-name">--</h2>
+          <p id="weather-description">--</p>
+        </div>
+        <div class="current-weather-temp">
+          <span id="current-temp">--</span>
+          <img id="weather-icon" src="" alt="Weather icon">
+        </div>
+      </div>
+      <div class="current-weather-details">
+        <div class="detail-item">
+          <label>Feels Like</label>
+          <span id="feels-like">--</span>
+        </div>
+        <div class="detail-item">
+          <label>Humidity</label>
+          <span id="humidity">--</span>
+        </div>
+        <div class="detail-item">
+          <label>Wind</label>
+          <span id="wind-speed">--</span>
+        </div>
+        <div class="detail-item">
+          <label>Clouds</label>
+          <span id="clouds">--</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5-Day Forecast Cards -->
+    <section id="forecast-section" class="forecast-section">
+      <h3>📅 5-Day Forecast</h3>
+      <div id="forecast-cards" class="forecast-cards"></div>
+    </section>
+
+    <!-- Chart Section -->
+    <section id="chart-section" class="chart-section">
+      <h3>📊 Weather Trends</h3>
+      <div class="chart-container">
+        <canvas id="weather-chart"></canvas>
+      </div>
+    </section>
+
+    <!-- Settings Section -->
+    <section class="settings-section">
+      <h3>⚙️ Alert Settings</h3>
+      <div class="settings-grid">
+        <div class="setting-item">
+          <label for="alert-threshold">Precipitation Alert Threshold (mm)</label>
+          <input 
+            type="number" 
+            id="alert-threshold" 
+            min="0" 
+            step="0.5" 
+            value="10"
+            aria-label="Precipitation alert threshold in millimeters"
+          >
+          <small>Forecast cards will be highlighted when precipitation exceeds this value</small>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/weather.js"></script>
+</body>
+</html>
