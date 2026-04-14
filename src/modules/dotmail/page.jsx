@@ -118,7 +118,7 @@ export default function DotmailPage() {
     setProcessError(null)
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('send-emails')
-      if (fnErr) throw new Error(fnErr.message)
+      if (fnErr) throw new Error(fnErr.message ?? fnErr.toString())
       setProcessResult(data)
       await reloadEmails()
     } catch (err) {
@@ -331,7 +331,7 @@ export default function DotmailPage() {
 
           {processResult && (
             <p className="mb-3 rounded bg-green-50 px-3 py-2 text-xs text-green-700">
-              Processed {processResult.processed} — sent: {processResult.sent}, failed: {processResult.failed}
+              Processed {processResult.processed ?? 0} — sent: {processResult.sent ?? 0}, failed: {processResult.failed ?? 0}
             </p>
           )}
           {processError && (
