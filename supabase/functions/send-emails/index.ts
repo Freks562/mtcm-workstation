@@ -23,8 +23,8 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const BATCH_SIZE = 50   // maximum emails to process per invocation
-const RESEND_API = 'https://api.resend.com/emails'
-const FROM_ADDRESS = Deno.env.get('RESEND_FROM_ADDRESS') ?? 'noreply@example.com'
+const RESEND_API_URL = 'https://api.resend.com/emails'
+const FROM_EMAIL = 'MTCM <ceo@mtcmlive.com>'
 
 serve(async (_req) => {
   const supabase = createClient(
@@ -157,7 +157,7 @@ async function sendOne(row: any, resendKey: string): Promise<SendResult> {
       : undefined
 
   const payload: Record<string, unknown> = {
-    from: FROM_ADDRESS,
+    from: FROM_EMAIL,
     to: toName ? [`${toName} <${toEmail}>`] : [toEmail],
     subject: row.subject,
     // Detect HTML: if body contains an HTML tag send as html, else as text
@@ -166,7 +166,7 @@ async function sendOne(row: any, resendKey: string): Promise<SendResult> {
       : { text: row.body }),
   }
 
-  const resp = await fetch(RESEND_API, {
+  const resp = await fetch(RESEND_API_URL, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${resendKey}`,
