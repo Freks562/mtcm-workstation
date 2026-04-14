@@ -9,6 +9,16 @@ export function LoginPage() {
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
+  async function handleGoogleSignIn() {
+    setError(null)
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    })
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
@@ -64,6 +74,14 @@ export function LoginPage() {
           className="w-full rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
         >
           {loading ? 'Signing in…' : 'Sign in'}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          className="w-full rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Sign in with Google
         </button>
       </form>
     </div>
