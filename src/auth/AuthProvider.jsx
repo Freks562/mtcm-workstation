@@ -56,7 +56,16 @@ export function AuthProvider({ children }) {
 
     async function initializeAuth() {
       try {
-        const { data, error } = await supabase.auth.getSession()
+        const TIMEOUT_MS = 5000
+
+        const sessionPromise = supabase.auth.getSession()
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('getSession timeout')), TIMEOUT_MS)
+        )
+
+        const { data, error } = await Promise.race([sessionPromise, timeoutPromise])
+
+        console.log('[Auth] getSession finished')
 
         if (error) {
           console.error('[getSession]', error)
