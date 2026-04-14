@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../lib/supabase.js'
+import { JamalAIPanel } from '../../shared/components/ui/JamalAIPanel.jsx'
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 
@@ -347,6 +348,10 @@ export default function AnalyticsPage() {
           ))}
         </div>
       )}
+
+      {/* JamalAI Analytics Assistant */}
+      <h2 className="mb-3 mt-8 text-xs font-semibold uppercase tracking-wide text-gray-400">JamalAI Assistant</h2>
+      <JamalAIPanel module="analytics" />
     </div>
   )
 }

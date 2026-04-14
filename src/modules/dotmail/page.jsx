@@ -7,6 +7,7 @@ import { TemplateForm } from './components/TemplateForm.jsx'
 import { EmailCampaignForm } from './components/EmailCampaignForm.jsx'
 import { SendPanel } from './components/SendPanel.jsx'
 import { Modal } from '../../shared/components/ui/Modal.jsx'
+import { JamalAIPanel } from '../../shared/components/ui/JamalAIPanel.jsx'
 import { useAuth } from '../../auth/AuthProvider.jsx'
 import { cn } from '../../shared/utils/cn.js'
 
@@ -386,6 +387,10 @@ export default function DotmailPage() {
           />
         </Modal>
       )}
+
+      {/* JamalAI Dotmail Assistant */}
+      <h2 className="mb-3 mt-8 text-xs font-semibold uppercase tracking-wide text-gray-400">JamalAI Assistant</h2>
+      <JamalAIPanel module="dotmail" />
     </div>
   )
 }

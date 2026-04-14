@@ -4,6 +4,7 @@ import { useDeals } from './hooks/useDeals.js'
 import { ContactForm } from './components/ContactForm.jsx'
 import { DealForm } from './components/DealForm.jsx'
 import { Modal } from '../../shared/components/ui/Modal.jsx'
+import { JamalAIPanel } from '../../shared/components/ui/JamalAIPanel.jsx'
 import { useAuth } from '../../auth/AuthProvider.jsx'
 import { cn } from '../../shared/utils/cn.js'
 
@@ -305,6 +306,10 @@ export default function CrmPage() {
           />
         </Modal>
       )}
+
+      {/* JamalAI CRM Assistant */}
+      <h2 className="mb-3 mt-8 text-xs font-semibold uppercase tracking-wide text-gray-400">JamalAI Assistant</h2>
+      <JamalAIPanel module="crm" />
     </div>
   )
 }
