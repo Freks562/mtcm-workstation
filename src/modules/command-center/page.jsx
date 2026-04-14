@@ -61,7 +61,8 @@ export default function CommandCenterPage() {
           supabase
             .from('emails')
             .select('id', { count: 'exact', head: true })
-            .gte('created_at', todayStart.toISOString()),
+            .eq('status', 'sent')
+            .gte('sent_at', todayStart.toISOString()),
           supabase
             .from('campaigns')
             .select('id', { count: 'exact', head: true })
