@@ -56,8 +56,6 @@ export function AuthProvider({ children }) {
       try {
         const { data, error } = await supabase.auth.getSession()
 
-        if (!mounted) return
-
         if (error) {
           console.error('[getSession]', error)
           setSession(null)
@@ -66,12 +64,13 @@ export function AuthProvider({ children }) {
           return
         }
 
+        if (!mounted) return
+
         const session = data?.session ?? null
         setSession(session)
         setUser(session?.user ?? null)
 
         if (session?.user?.id) {
-          await upsertProfile(session.user)
           const profile = await fetchProfile(session.user.id)
           if (!mounted) return
           setProfile(profile)
@@ -80,7 +79,6 @@ export function AuthProvider({ children }) {
         }
       } catch (error) {
         console.error('[initializeAuth]', error)
-        if (!mounted) return
         setSession(null)
         setUser(null)
         setProfile(null)
@@ -113,8 +111,6 @@ export function AuthProvider({ children }) {
       } else {
         setProfile(null)
       }
-
-      if (mounted) setLoading(false)
     })
 
     return () => {
