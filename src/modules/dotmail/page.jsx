@@ -9,6 +9,7 @@ import { SendPanel } from './components/SendPanel.jsx'
 import { Modal } from '../../shared/components/ui/Modal.jsx'
 import { useAuth } from '../../auth/AuthProvider.jsx'
 import { cn } from '../../shared/utils/cn.js'
+import { supabase } from '../../lib/supabase.js'
 
 const STATUS_BADGE = {
   draft: 'bg-gray-100 text-gray-600',
@@ -37,6 +38,9 @@ export default function DotmailPage() {
   const [sendModal, setSendModal] = useState(null)           // null | campaign obj
   const [selectedCampaignId, setSelectedCampaignId] = useState('')
   const [saving, setSaving] = useState(false)
+  const [processing, setProcessing] = useState(false)
+  const [processResult, setProcessResult] = useState(null)
+  const [processError, setProcessError] = useState(null)
 
   const { templates, loading: tplLoading, createTemplate, updateTemplate, deleteTemplate } =
     useEmailTemplates()
@@ -100,11 +104,31 @@ export default function DotmailPage() {
       }
       setSendModal(null)
       setSelectedCampaignId(sendModal.id)
+      setTab('log')
       await reloadEmails()
     } finally {
       setSaving(false)
     }
   }
+
+  // ── Process queue handler ──────────────────────────────────────
+  async function handleProcessQueue() {
+    setProcessing(true)
+    setProcessResult(null)
+    setProcessError(null)
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('send-emails')
+      if (fnErr) throw new Error(fnErr.message)
+      setProcessResult(data)
+      await reloadEmails()
+    } catch (err) {
+      setProcessError(`Process queue failed: ${err.message}`)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const queuedCount = emails.filter((e) => e.status === 'queued').length
 
   const TABS = ['templates', 'campaigns', 'log']
 
@@ -268,7 +292,7 @@ export default function DotmailPage() {
       {/* ── EMAIL LOG TAB ── */}
       {tab === 'log' && (
         <div>
-          <div className="mb-4 flex items-center gap-3">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
             <label className="text-xs font-medium text-gray-500">Filter by Campaign</label>
             <select
               value={selectedCampaignId}
@@ -280,7 +304,39 @@ export default function DotmailPage() {
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
+
+            <div className="ml-auto flex items-center gap-3">
+              {queuedCount > 0 && (
+                <span className="rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-700">
+                  {queuedCount} queued
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleProcessQueue}
+                disabled={processing}
+                className="rounded border border-indigo-600 px-3 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 disabled:opacity-50"
+              >
+                {processing ? 'Processing…' : 'Process Queue'}
+              </button>
+              <button
+                type="button"
+                onClick={reloadEmails}
+                className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                Refresh
+              </button>
+            </div>
           </div>
+
+          {processResult && (
+            <p className="mb-3 rounded bg-green-50 px-3 py-2 text-xs text-green-700">
+              Processed {processResult.processed} — sent: {processResult.sent}, failed: {processResult.failed}
+            </p>
+          )}
+          {processError && (
+            <p className="mb-3 rounded bg-red-50 px-3 py-2 text-sm text-red-600">{processError}</p>
+          )}
 
           {emailsLoading ? (
             <p className="text-sm text-gray-500">Loading…</p>
