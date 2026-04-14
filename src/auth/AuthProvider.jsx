@@ -19,16 +19,11 @@ async function upsertProfile(user) {
 }
 
 async function fetchProfile(userId) {
-  const TIMEOUT_MS = 5000
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
-
   try {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .abortSignal(controller.signal)
       .maybeSingle()
 
     if (error) {
@@ -40,14 +35,11 @@ async function fetchProfile(userId) {
   } catch (error) {
     console.error('[fetchProfile]', error)
     return null
-  } finally {
-    clearTimeout(timer)
   }
 }
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
-  const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -65,34 +57,30 @@ export function AuthProvider({ children }) {
 
         const { data, error } = await Promise.race([sessionPromise, timeoutPromise])
 
-        console.log('[Auth] getSession finished')
+        if (!mounted) return
 
         if (error) {
           console.error('[getSession]', error)
           setSession(null)
-          setUser(null)
           setProfile(null)
           return
         }
 
-        if (!mounted) return
-
         const session = data?.session ?? null
         setSession(session)
-        setUser(session?.user ?? null)
 
-        if (session?.user?.id) {
+        if (session?.user) {
           await upsertProfile(session.user)
-          const profile = await fetchProfile(session.user.id)
+          const nextProfile = await fetchProfile(session.user.id)
           if (!mounted) return
-          setProfile(profile)
+          setProfile(nextProfile)
         } else {
           setProfile(null)
         }
       } catch (error) {
-        console.error('[initializeAuth]', error)
+        console.error('[AuthProvider init]', error)
+        if (!mounted) return
         setSession(null)
-        setUser(null)
         setProfile(null)
       } finally {
         if (mounted) setLoading(false)
@@ -106,24 +94,22 @@ export function AuthProvider({ children }) {
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return
 
-      setSession(session ?? null)
-      setUser(session?.user ?? null)
+      try {
+        setSession(session ?? null)
 
-      if (session?.user?.id) {
-        try {
+        if (session?.user) {
           await upsertProfile(session.user)
-          const profile = await fetchProfile(session.user.id)
+          const nextProfile = await fetchProfile(session.user.id)
           if (!mounted) return
-          setProfile(profile)
-        } catch (error) {
-          console.error('[onAuthStateChange]', error)
-          if (!mounted) return
+          setProfile(nextProfile)
+        } else {
           setProfile(null)
-        } finally {
-          if (mounted) setLoading(false)
         }
-      } else {
+      } catch (error) {
+        console.error('[onAuthStateChange]', error)
+        if (!mounted) return
         setProfile(null)
+      } finally {
         if (mounted) setLoading(false)
       }
     })
@@ -134,10 +120,8 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  if (loading) return null
-
   return (
-    <AuthContext.Provider value={{ session, user, profile, loading }}>
+    <AuthContext.Provider value={{ session, profile, loading }}>
       {children}
     </AuthContext.Provider>
   )
