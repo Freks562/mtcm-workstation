@@ -11,12 +11,32 @@ async function upsertProfile(user) {
 }
 
 async function fetchProfile(userId) {
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
-  return data ?? null
+  const TIMEOUT_MS = 5000
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .abortSignal(controller.signal)
+      .single()
+
+    if (error) {
+      // PGRST116 = no rows found; treat as a missing profile, not an error
+      if (error.code === 'PGRST116') return null
+      console.error('[fetchProfile]', error)
+      return null
+    }
+
+    return data ?? null
+  } catch (error) {
+    console.error('[fetchProfile]', error)
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 export function AuthProvider({ children }) {
