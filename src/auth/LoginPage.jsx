@@ -21,12 +21,13 @@ export function LoginPage() {
 
   async function handleGithubSignIn() {
     setError(null)
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
         redirectTo: window.location.origin,
       },
     })
+    if (error) setError(error.message)
   }
 
   async function handleSubmit(e) {
