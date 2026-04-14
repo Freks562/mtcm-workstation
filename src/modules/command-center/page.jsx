@@ -22,6 +22,8 @@ const EVENT_LABELS = {
   email_campaign_created: 'Email campaign created',
   email_campaign_updated: 'Email campaign updated',
   email_send_queued: 'Email queued',
+  email_sent: 'Email sent',
+  email_failed: 'Email failed',
 }
 
 export default function CommandCenterPage() {

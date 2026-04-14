@@ -296,6 +296,7 @@ export default function DotmailPage() {
                     <th className="px-4 py-3 text-left">Status</th>
                     <th className="px-4 py-3 text-left">Sent By</th>
                     <th className="px-4 py-3 text-left">Queued At</th>
+                    <th className="px-4 py-3 text-left">Provider ID / Error</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -322,6 +323,15 @@ export default function DotmailPage() {
                       </td>
                       <td className="px-4 py-3 text-gray-500">
                         {new Date(em.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-xs">
+                        {em.provider_id ? (
+                          <span className="font-mono text-gray-500">{em.provider_id}</span>
+                        ) : em.failure_reason ? (
+                          <span className="text-red-500">{em.failure_reason}</span>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
                       </td>
                     </tr>
                   ))}

@@ -1,12 +1,17 @@
 import { useState } from 'react'
+import { supabase } from '../../../lib/supabase.js'
 import { cn } from '../../../shared/utils/cn.js'
 
 /**
  * SendPanel — shown when clicking "Send" on an email campaign.
  *
  * Queues one email per selected contact to the `emails` table with status='queued'.
- * A Supabase Edge Function (supabase/functions/send-emails/index.ts) is the
- * intended server-side hook that picks up queued rows and calls Resend.
+ * The "Process Queue" button then invokes the Supabase Edge Function
+ * `supabase/functions/send-emails/index.ts` which:
+ *   1. Claims queued rows and marks them 'sending'
+ *   2. Calls Resend API server-side (RESEND_API_KEY secret never leaves the server)
+ *   3. Updates rows to 'sent' (with provider_id) or 'failed' (with failure_reason)
+ *   4. Logs email_sent / email_failed events
  */
 export function SendPanel({ campaign, contacts, templates, onQueue, onClose, saving }) {
   const [selectedContacts, setSelectedContacts] = useState([])
@@ -14,6 +19,8 @@ export function SendPanel({ campaign, contacts, templates, onQueue, onClose, sav
   const [subject, setSubject] = useState(campaign?.subject ?? '')
   const [body, setBody] = useState(campaign?.body ?? '')
   const [error, setError] = useState(null)
+  const [processing, setProcessing] = useState(false)
+  const [processResult, setProcessResult] = useState(null)
 
   function toggleContact(id) {
     setSelectedContacts((prev) =>
@@ -44,16 +51,41 @@ export function SendPanel({ campaign, contacts, templates, onQueue, onClose, sav
     }
   }
 
+  /**
+   * Invoke the send-emails Edge Function to process queued rows.
+   * The function URL is derived from the configured Supabase project URL.
+   * RESEND_API_KEY is a server-side secret — it is never present here.
+   */
+  async function handleProcessQueue() {
+    setProcessing(true)
+    setProcessResult(null)
+    setError(null)
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('send-emails')
+      if (fnErr) throw new Error(fnErr.message)
+      setProcessResult(data)
+    } catch (err) {
+      setError(`Process queue failed: ${err.message}`)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
   return (
     <form onSubmit={handleQueue} className="space-y-4">
-      <p className="rounded bg-amber-50 px-3 py-2 text-xs text-amber-700">
-        Emails will be queued (status = <code>queued</code>). A server-side Supabase
-        Edge Function must call Resend to deliver them.
-        Hook point: <code>supabase/functions/send-emails/index.ts</code>
+      <p className="rounded bg-blue-50 px-3 py-2 text-xs text-blue-700">
+        Step 1 — Queue emails below. Step 2 — click <strong>Process Queue</strong> to
+        deliver via Resend (server-side Edge Function). No API keys in client code.
       </p>
 
       {error && (
         <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+      )}
+
+      {processResult && (
+        <p className="rounded bg-green-50 px-3 py-2 text-xs text-green-700">
+          Processed {processResult.processed} — sent: {processResult.sent}, failed: {processResult.failed}
+        </p>
       )}
 
       {templates.length > 0 && (
@@ -125,23 +157,36 @@ export function SendPanel({ campaign, contacts, templates, onQueue, onClose, sav
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-2">
+      <div className="flex items-center justify-between gap-3 pt-2">
         <button
           type="button"
-          onClick={onClose}
-          className="rounded px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={saving}
+          onClick={handleProcessQueue}
+          disabled={processing}
           className={cn(
-            'rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50'
+            'rounded border border-indigo-600 px-3 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 disabled:opacity-50'
           )}
         >
-          {saving ? 'Queuing…' : `Queue ${selectedContacts.length} Email${selectedContacts.length !== 1 ? 's' : ''}`}
+          {processing ? 'Processing…' : 'Process Queue'}
         </button>
+
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className={cn(
+              'rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50'
+            )}
+          >
+            {saving ? 'Queuing…' : `Queue ${selectedContacts.length} Email${selectedContacts.length !== 1 ? 's' : ''}`}
+          </button>
+        </div>
       </div>
     </form>
   )
