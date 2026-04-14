@@ -5,10 +5,14 @@ const AuthContext = createContext(null)
 
 async function upsertProfile(user) {
   try {
-    await supabase.from('profiles').upsert(
+    const { error } = await supabase.from('profiles').upsert(
       { id: user.id, updated_at: new Date().toISOString() },
       { onConflict: 'id', ignoreDuplicates: false }
     )
+
+    if (error) {
+      console.error('[upsertProfile]', error)
+    }
   } catch (error) {
     console.error('[upsertProfile]', error)
   }
@@ -69,6 +73,7 @@ export function AuthProvider({ children }) {
         setUser(session?.user ?? null)
 
         if (session?.user?.id) {
+          await upsertProfile(session.user)
           const profile = await fetchProfile(session.user.id)
           if (!mounted) return
           setProfile(profile)
@@ -105,9 +110,12 @@ export function AuthProvider({ children }) {
           console.error('[onAuthStateChange]', error)
           if (!mounted) return
           setProfile(null)
+        } finally {
+          if (mounted) setLoading(false)
         }
       } else {
         setProfile(null)
+        if (mounted) setLoading(false)
       }
     })
 
