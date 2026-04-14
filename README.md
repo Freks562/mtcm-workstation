@@ -44,6 +44,22 @@ npx supabase db push
 - In Supabase dashboard → **Authentication → URL Configuration**
 - Add `http://localhost:5173` to the allowed redirect URLs
 
+### 7. Enable Google OAuth (optional)
+1. Go to [Google Cloud Console → APIs & Credentials](https://console.cloud.google.com/apis/credentials) and create an **OAuth 2.0 Client ID** (Web application).
+2. Add the Supabase callback URL as an **Authorized redirect URI**:
+   ```
+   https://<your-project-ref>.supabase.co/auth/v1/callback
+   ```
+3. In Supabase dashboard → **Authentication → Providers → Google**, enable the provider and paste the **Client ID** and **Client Secret**.
+4. Add the credentials to your `.env.local`:
+   ```
+   SUPABASE_AUTH_GOOGLE_CLIENT_ID=your-google-client-id
+   SUPABASE_AUTH_GOOGLE_SECRET=your-google-client-secret
+   ```
+
+> **Why this is needed:** Without these steps the "Sign in with Google" button returns  
+> `{"code":400,"error_code":"validation_failed","msg":"Unsupported provider: provider is not enabled"}`.
+
 ### 7. Deploy edge functions
 ```bash
 npx supabase functions deploy send-emails

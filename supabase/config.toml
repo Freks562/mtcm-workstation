@@ -78,6 +78,14 @@ enable_confirmations = false
 enable_signup = false
 enable_confirmations = false
 
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
+# Redirect URL registered in the Google Cloud Console OAuth client
+# (must also be added to Supabase Dashboard → Authentication → URL Configuration → Redirect URLs for production)
+redirect_uri = ""
+
 [edge_runtime]
 enabled = true
 policy = "oneshot"
