@@ -17,6 +17,11 @@ const EVENT_LABELS = {
   call_logged: 'Call logged',
   campaign_created: 'Campaign created',
   campaign_updated: 'Campaign updated',
+  template_created: 'Email template created',
+  template_updated: 'Email template updated',
+  email_campaign_created: 'Email campaign created',
+  email_campaign_updated: 'Email campaign updated',
+  email_send_queued: 'Email queued',
 }
 
 export default function CommandCenterPage() {
@@ -27,6 +32,8 @@ export default function CommandCenterPage() {
     openDealValue: null,
     callsToday: null,
     activeCampaigns: null,
+    emailsToday: null,
+    activeEmailCampaigns: null,
   })
   const [recentEvents, setRecentEvents] = useState([])
   const [statsLoading, setStatsLoading] = useState(true)
@@ -36,7 +43,7 @@ export default function CommandCenterPage() {
       const todayStart = new Date()
       todayStart.setUTCHours(0, 0, 0, 0)
 
-      const [contactsRes, dealsRes, callsTodayRes, activeCampaignsRes, eventsRes] =
+      const [contactsRes, dealsRes, callsTodayRes, activeCampaignsRes, emailsTodayRes, activeEmailCampRes, eventsRes] =
         await Promise.all([
           supabase.from('contacts').select('id', { count: 'exact', head: true }),
           supabase.from('deals').select('value, stage'),
@@ -47,7 +54,17 @@ export default function CommandCenterPage() {
           supabase
             .from('campaigns')
             .select('id', { count: 'exact', head: true })
-            .eq('status', 'active'),
+            .eq('status', 'active')
+            .eq('type', 'telemarketing'),
+          supabase
+            .from('emails')
+            .select('id', { count: 'exact', head: true })
+            .gte('created_at', todayStart.toISOString()),
+          supabase
+            .from('campaigns')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', 'active')
+            .eq('type', 'email'),
           supabase
             .from('events')
             .select('type, occurred_at, metadata')
@@ -66,6 +83,8 @@ export default function CommandCenterPage() {
         openDealValue: openValue,
         callsToday: callsTodayRes.count ?? 0,
         activeCampaigns: activeCampaignsRes.count ?? 0,
+        emailsToday: emailsTodayRes.count ?? 0,
+        activeEmailCampaigns: activeEmailCampRes.count ?? 0,
       })
       setRecentEvents(eventsRes.data ?? [])
       setStatsLoading(false)
@@ -108,7 +127,14 @@ export default function CommandCenterPage() {
       <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Telemarketing</h2>
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <StatCard label="Calls Today" value={stats.callsToday} loading={statsLoading} />
-        <StatCard label="Active Campaigns" value={stats.activeCampaigns} loading={statsLoading} />
+        <StatCard label="Active Telemarketing Campaigns" value={stats.activeCampaigns} loading={statsLoading} />
+      </div>
+
+      {/* DotMail stats */}
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">DotMail</h2>
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatCard label="Emails Sent Today" value={stats.emailsToday} loading={statsLoading} />
+        <StatCard label="Active Email Campaigns" value={stats.activeEmailCampaigns} loading={statsLoading} />
       </div>
 
       {/* Recent events */}
