@@ -1,0 +1,4 @@
+-- Migration: 004_tasks
+-- Table: tasks
+-- Action items assignable to any user, optionally linked to a contact or deal.
+-- Fields to define: id, title, description, due_at, completed, assigned_to, contact_id, deal_id, created_at, updated_at

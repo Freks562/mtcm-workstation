@@ -1,0 +1,4 @@
+-- Migration: 001_profiles
+-- Table: profiles
+-- One profile row per authenticated user (references auth.users).
+-- Fields to define: id, full_name, avatar_url, role, created_at, updated_at

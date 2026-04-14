@@ -1,0 +1,4 @@
+-- Migration: 007_call_logs
+-- Table: call_logs
+-- Individual call record for the telemarketing module.
+-- Fields to define: id, contact_id, agent_id, duration_seconds, outcome, notes, called_at, created_at

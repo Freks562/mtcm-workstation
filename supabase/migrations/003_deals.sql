@@ -1,0 +1,4 @@
+-- Migration: 003_deals
+-- Table: deals
+-- Sales pipeline deal record linked to a contact.
+-- Fields to define: id, title, value, stage, contact_id, owner_id, closed_at, created_at, updated_at

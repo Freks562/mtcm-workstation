@@ -1,0 +1,4 @@
+-- Migration: 008_emails
+-- Table: emails
+-- Individual email send/receive record linked to a contact.
+-- Fields to define: id, contact_id, campaign_id, direction, subject, body, status, sent_at, created_at

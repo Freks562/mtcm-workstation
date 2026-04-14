@@ -1,0 +1,4 @@
+-- Migration: 002_contacts
+-- Table: contacts
+-- Core CRM contact record.
+-- Fields to define: id, first_name, last_name, email, phone, company, status, owner_id, created_at, updated_at

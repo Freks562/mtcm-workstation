@@ -1,0 +1,4 @@
+-- Migration: 006_campaign_contacts
+-- Table: campaign_contacts
+-- Junction table linking campaigns to contacts (many-to-many).
+-- Fields to define: id, campaign_id, contact_id, status, sent_at, opened_at, clicked_at

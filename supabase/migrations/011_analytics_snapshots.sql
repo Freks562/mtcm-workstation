@@ -1,0 +1,4 @@
+-- Migration: 011_analytics_snapshots
+-- Table: analytics_snapshots
+-- Periodic aggregated metrics snapshot for the analytics module.
+-- Fields to define: id, snapshot_date, total_contacts, total_deals, deals_closed, revenue, calls_made, emails_sent, created_at

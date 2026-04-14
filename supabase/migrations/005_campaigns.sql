@@ -1,0 +1,4 @@
+-- Migration: 005_campaigns
+-- Table: campaigns
+-- Email/telemarketing campaign record.
+-- Fields to define: id, name, type, status, subject, body, scheduled_at, sent_at, owner_id, created_at, updated_at

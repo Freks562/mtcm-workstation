@@ -1,0 +1,4 @@
+-- Migration: 010_events
+-- Table: events
+-- Audit/activity event log for all significant user actions.
+-- Fields to define: id, type, actor_id, entity_type, entity_id, metadata, occurred_at

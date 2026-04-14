@@ -1,0 +1,4 @@
+-- Migration: 009_email_templates
+-- Table: email_templates
+-- Reusable email templates for campaigns and manual sends.
+-- Fields to define: id, name, subject, body, owner_id, created_at, updated_at
