@@ -4,10 +4,14 @@ import { supabase } from '../lib/supabase.js'
 const AuthContext = createContext(null)
 
 async function upsertProfile(user) {
-  await supabase.from('profiles').upsert(
-    { id: user.id, updated_at: new Date().toISOString() },
-    { onConflict: 'id', ignoreDuplicates: false }
-  )
+  try {
+    await supabase.from('profiles').upsert(
+      { id: user.id, updated_at: new Date().toISOString() },
+      { onConflict: 'id', ignoreDuplicates: false }
+    )
+  } catch (error) {
+    console.error('[upsertProfile]', error)
+  }
 }
 
 async function fetchProfile(userId) {
@@ -45,26 +49,52 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session)
-      if (session?.user) {
-        await upsertProfile(session.user)
-        setProfile(await fetchProfile(session.user.id))
+    let cancelled = false
+
+    const init = async () => {
+      try {
+        const { data: { session } } = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('getSession timeout')), 8000)
+          ),
+        ])
+
+        if (cancelled) return
+        setSession(session)
+
+        if (session?.user) {
+          await upsertProfile(session.user)
+          if (!cancelled) setProfile(await fetchProfile(session.user.id))
+        }
+      } catch (error) {
+        console.error('[AuthProvider] init error', error)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-      setLoading(false)
-    })
+    }
+
+    init()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
       if (session?.user) {
-        await upsertProfile(session.user)
-        setProfile(await fetchProfile(session.user.id))
+        try {
+          await upsertProfile(session.user)
+          setProfile(await fetchProfile(session.user.id))
+        } catch (error) {
+          console.error('[AuthProvider] onAuthStateChange error', error)
+          setProfile(null)
+        }
       } else {
         setProfile(null)
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
   }, [])
 
   return (
