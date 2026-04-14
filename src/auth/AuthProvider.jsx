@@ -44,61 +44,89 @@ async function fetchProfile(userId) {
 }
 
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(undefined)
+  const [session, setSession] = useState(null)
+  const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let cancelled = false
+    let mounted = true
 
-    const init = async () => {
+    async function initializeAuth() {
       try {
-        const { data: { session } } = await Promise.race([
-          supabase.auth.getSession(),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('getSession timeout')), 8000)
-          ),
-        ])
+        const { data, error } = await supabase.auth.getSession()
 
-        if (cancelled) return
+        if (!mounted) return
+
+        if (error) {
+          console.error('[getSession]', error)
+          setSession(null)
+          setUser(null)
+          setProfile(null)
+          return
+        }
+
+        const session = data?.session ?? null
         setSession(session)
+        setUser(session?.user ?? null)
 
-        if (session?.user) {
+        if (session?.user?.id) {
           await upsertProfile(session.user)
-          if (!cancelled) setProfile(await fetchProfile(session.user.id))
+          const profile = await fetchProfile(session.user.id)
+          if (!mounted) return
+          setProfile(profile)
+        } else {
+          setProfile(null)
         }
       } catch (error) {
-        console.error('[AuthProvider] init error', error)
+        console.error('[initializeAuth]', error)
+        if (!mounted) return
+        setSession(null)
+        setUser(null)
+        setProfile(null)
       } finally {
-        if (!cancelled) setLoading(false)
+        if (mounted) setLoading(false)
       }
     }
 
-    init()
+    initializeAuth()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session)
-      if (session?.user) {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return
+
+      setSession(session ?? null)
+      setUser(session?.user ?? null)
+
+      if (session?.user?.id) {
         try {
           await upsertProfile(session.user)
-          setProfile(await fetchProfile(session.user.id))
+          const profile = await fetchProfile(session.user.id)
+          if (!mounted) return
+          setProfile(profile)
         } catch (error) {
-          console.error('[AuthProvider] onAuthStateChange error', error)
+          console.error('[onAuthStateChange]', error)
+          if (!mounted) return
           setProfile(null)
         }
       } else {
         setProfile(null)
       }
+
+      if (mounted) setLoading(false)
     })
 
     return () => {
-      cancelled = true
+      mounted = false
       subscription.unsubscribe()
     }
   }, [])
 
+  if (loading) return null
+
   return (
-    <AuthContext.Provider value={{ session, profile, loading }}>
+    <AuthContext.Provider value={{ session, user, profile, loading }}>
       {children}
     </AuthContext.Provider>
   )
