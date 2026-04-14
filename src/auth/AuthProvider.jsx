@@ -25,11 +25,9 @@ async function fetchProfile(userId) {
       .select('*')
       .eq('id', userId)
       .abortSignal(controller.signal)
-      .single()
+      .maybeSingle()
 
     if (error) {
-      // PGRST116 = no rows found; treat as a missing profile, not an error
-      if (error.code === 'PGRST116') return null
       console.error('[fetchProfile]', error)
       return null
     }
