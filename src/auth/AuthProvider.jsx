@@ -25,20 +25,50 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session)
-      if (session?.user) {
-        await upsertProfile(session.user)
-        setProfile(await fetchProfile(session.user.id))
+    async function bootstrap() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setSession(session)
+        if (session?.user) {
+          try {
+            await upsertProfile(session.user)
+          } catch (err) {
+            console.error('[AuthProvider] upsertProfile failed:', err)
+          }
+          try {
+            setProfile(await fetchProfile(session.user.id))
+          } catch (err) {
+            console.error('[AuthProvider] fetchProfile failed:', err)
+            setProfile(null)
+          }
+        }
+      } catch (err) {
+        console.error('[AuthProvider] getSession failed:', err)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
-    })
+    }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    bootstrap()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
+      if (event === 'SIGNED_OUT') {
+        setProfile(null)
+        return
+      }
       if (session?.user) {
-        await upsertProfile(session.user)
-        setProfile(await fetchProfile(session.user.id))
+        try {
+          await upsertProfile(session.user)
+        } catch (err) {
+          console.error('[AuthProvider] onAuthStateChange upsertProfile failed:', err)
+        }
+        try {
+          setProfile(await fetchProfile(session.user.id))
+        } catch (err) {
+          console.error('[AuthProvider] onAuthStateChange fetchProfile failed:', err)
+          setProfile(null)
+        }
       } else {
         setProfile(null)
       }
