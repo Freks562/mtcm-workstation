@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase.js'
 import { useAuth } from '../../auth/AuthProvider.jsx'
 
@@ -24,6 +24,96 @@ const EVENT_LABELS = {
   email_send_queued: 'Email queued',
   email_sent: 'Email sent',
   email_failed: 'Email failed',
+}
+
+function JamalAIBrainPanel() {
+  const [prompt, setPrompt] = useState('')
+  const [reply, setReply] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const replyRef = useRef(null)
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!prompt.trim() || loading) return
+    setLoading(true)
+    setError(null)
+    setReply(null)
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('jamalaibrain', {
+        body: { prompt: prompt.trim() },
+      })
+      if (fnError) throw fnError
+      setReply(data?.reply ?? '')
+    } catch (err) {
+      setError(err?.message ?? 'Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (reply !== null && replyRef.current) {
+      replyRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  }, [reply])
+
+  return (
+    <div className="rounded-lg border border-indigo-200 bg-white p-6">
+      <div className="mb-4 flex items-center gap-2">
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+          AI
+        </span>
+        <h3 className="text-sm font-semibold text-gray-900">JamalAIBrain</h3>
+        <span className="ml-auto rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
+          Beta
+        </span>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <textarea
+          rows={3}
+          className="w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+          placeholder='Ask anything… e.g. "Summarize open deals", "Draft a follow-up email", "Show inactive campaigns"'
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          disabled={loading}
+        />
+        <button
+          type="submit"
+          disabled={!prompt.trim() || loading}
+          className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? (
+            <>
+              <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              Thinking…
+            </>
+          ) : (
+            'Ask JamalAIBrain'
+          )}
+        </button>
+      </form>
+
+      {error && (
+        <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {reply !== null && !error && (
+        <div
+          ref={replyRef}
+          className="mt-4 rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 whitespace-pre-wrap"
+        >
+          {reply}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function CommandCenterPage() {
@@ -163,6 +253,10 @@ export default function CommandCenterPage() {
           ))}
         </div>
       )}
+
+      {/* JamalAIBrain */}
+      <h2 className="mb-3 mt-6 text-xs font-semibold uppercase tracking-wide text-gray-400">JamalAIBrain</h2>
+      <JamalAIBrainPanel />
     </div>
   )
 }
