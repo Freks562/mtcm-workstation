@@ -70,11 +70,34 @@ export default function DotmailPage() {
   async function handleCampaignSubmit(fields) {
     setSaving(true)
     try {
+      let savedCampaign
+      let shouldQueue = false
+
       if (campaignModal === 'new') {
-        await createEmailCampaign({ ...fields, owner_id: actorId }, actorId)
+        savedCampaign = await createEmailCampaign({ ...fields, owner_id: actorId }, actorId)
+        shouldQueue = savedCampaign.status === 'active'
       } else {
-        await updateEmailCampaign(campaignModal.id, fields, actorId)
+        const wasActive = campaignModal.status === 'active'
+        savedCampaign = await updateEmailCampaign(campaignModal.id, fields, actorId)
+        shouldQueue = !wasActive && savedCampaign.status === 'active'
       }
+
+      // Queue one outbound email per contact when campaign goes active
+      if (shouldQueue && contacts.length > 0) {
+        for (const contact of contacts) {
+          await queueEmail(
+            {
+              contact_id: contact.id,
+              campaign_id: savedCampaign.id,
+              sender_id: actorId,
+              subject: savedCampaign.subject,
+              body: savedCampaign.body,
+            },
+            actorId
+          )
+        }
+      }
+
       setCampaignModal(null)
     } finally {
       setSaving(false)
