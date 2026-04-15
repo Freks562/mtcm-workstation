@@ -105,10 +105,91 @@ Keep subject lines under 60 characters.`,
 You help interpret CRM pipeline metrics, call volume trends, email campaign performance,
 and overall workstation activity. Summarize key insights and highlight anomalies.
 Be concise and use plain language.`,
+
+  freksframe: `You are a creative director AI for FreksFrame, the AI lyric-video storyboard studio
+inside the MTCM Workstation.
+When asked to generate a storyboard, you receive song lyrics and a visual style.
+Your job is to break the lyrics into logical scenes and return a JSON array – nothing else.
+Each element must have exactly two keys:
+  "description"   – one sentence describing what happens / is shown in the scene
+  "visual_prompt" – a concise image-generation prompt (<= 40 words) matching the style
+
+Rules:
+- Return ONLY a raw JSON array. Do NOT wrap it in markdown code fences.
+- Do NOT include any explanation, preamble, or commentary outside the JSON.
+- One scene per meaningful lyric line or couplet; aim for 4-16 scenes total.
+- Prompts must be evocative, cinematic, and reference the requested style.
+- If lyrics are empty or nonsensical, return an empty array [].`,
 }
 
 const ASSIST_FALLBACK = `You are an AI assistant for the MTCM Workstation.
 Help the user with their request concisely and professionally.`
+
+// ── FreksFrame structured-output handler ──────────────────────────────────────
+//
+// For module=freksframe + task=generate_storyboard the AI must return a JSON
+// array of scenes.  This function calls the AI, strips any accidental markdown
+// fences, parses the JSON, validates the shape, and returns the scenes array.
+
+async function generateStoryboard(
+  lyrics: string,
+  style: string,
+  apiKey: string,
+  baseUrl: string,
+  model: string,
+): Promise<{ scenes: Array<{ description: string; visual_prompt: string }>; raw: string }> {
+  const systemPrompt = ASSIST_PROMPTS['freksframe']
+  const userContent =
+    `Generate a storyboard for the following song lyrics.\nVisual style: ${style}\n\nLyrics:\n${lyrics}`
+
+  const aiResult = await callAI(
+    [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userContent },
+    ],
+    apiKey,
+    baseUrl,
+    model,
+    2048,
+    0.6,
+  )
+
+  if ('error' in aiResult) throw aiResult.error
+
+  const raw = aiResult.reply.trim()
+
+  // AI models sometimes wrap JSON in markdown code fences (```json ... ```) even
+  // when instructed not to.  Strip the opening and closing fence if present.
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(cleaned)
+  } catch (_) {
+    const preview = raw.length > 300 ? `${raw.slice(0, 300)}…` : raw
+    throw `AI returned malformed JSON. Raw response:\n${preview}`
+  }
+
+  if (!Array.isArray(parsed)) {
+    throw `AI response is not a JSON array. Got: ${typeof parsed}`
+  }
+
+  const scenes = (parsed as unknown[]).map((item, i) => {
+    if (typeof item !== 'object' || item === null) {
+      throw `Scene ${i} is not an object`
+    }
+    const s = item as Record<string, unknown>
+    if (typeof s.description !== 'string' || typeof s.visual_prompt !== 'string') {
+      throw `Scene ${i} is missing description or visual_prompt`
+    }
+    return {
+      description: (s.description as string).trim(),
+      visual_prompt: (s.visual_prompt as string).trim(),
+    }
+  })
+
+  return { scenes, raw }
+}
 
 // ── Main handler ───────────────────────────────────────────────────────────
 
@@ -159,6 +240,40 @@ serve(async (req) => {
       )
     }
 
+    // ── FreksFrame: generate_storyboard ─────────────────────────────────
+    if (module === 'freksframe' && task === 'generate_storyboard') {
+      const data = body.data as Record<string, unknown> | undefined
+      const lyrics = typeof data?.lyrics === 'string' ? data.lyrics.trim() : ''
+      const style  = typeof data?.style  === 'string' ? data.style.trim()  : 'cinematic'
+
+      if (!lyrics) {
+        return new Response(
+          JSON.stringify({ error: 'data.lyrics is required for generate_storyboard.' }),
+          { status: 400, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } },
+        )
+      }
+
+      try {
+        const { scenes, raw } = await generateStoryboard(lyrics, style, apiKey, baseUrl, model)
+        return new Response(
+          JSON.stringify({ scenes, module, task, model, route: 'freksframe_storyboard', raw }),
+          { status: 200, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } },
+        )
+      } catch (err) {
+        // Return a safe, generic message to the client.  The detailed cause is
+        // a string we built ourselves (never a raw stack trace) because
+        // generateStoryboard() only throws string literals or AI-provider
+        // error text.  Log the full detail server-side for debugging.
+        const detail = typeof err === 'string' ? err : (err as Error).message
+        console.error('[freksframe/generate_storyboard] error:', detail)
+        return new Response(
+          JSON.stringify({ error: 'Storyboard generation failed. Please try again.' }),
+          { status: 502, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } },
+        )
+      }
+    }
+
+    // ── All other module-assist requests ─────────────────────────────────
     const systemPrompt = ASSIST_PROMPTS[module] ?? ASSIST_FALLBACK
     const userContent = body.data
       ? `${task}\n\nContext data:\n${JSON.stringify(body.data, null, 2)}`

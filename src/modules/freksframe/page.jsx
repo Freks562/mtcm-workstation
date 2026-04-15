@@ -144,7 +144,7 @@ export default function FreksFramePage() {
 
   const { scenes, loading: scenesLoading, error: scenesError, replaceScenes } =
     useFreksScenes(selectedId)
-  const { renders, loading: rendersLoading, error: rendersError, createRender } =
+  const { renders, loading: rendersLoading, error: rendersError, createRender, load: reloadRenders } =
     useFreksRenders(selectedId)
 
   // UI state
@@ -245,10 +245,11 @@ export default function FreksFramePage() {
       })
       if (fnError) throw fnError
 
-      // Gateway is expected to return { reply, scenes: [{ description, visual_prompt }] }
+      // Gateway returns { scenes: [{ description, visual_prompt }] } for this task.
+      // `reply` is also present for general assist compatibility but is not used here.
       const sceneList = Array.isArray(data?.scenes) ? data.scenes : []
       if (!sceneList.length) {
-        throw new Error(data?.reply ?? 'No scenes returned. Check your AI gateway configuration.')
+        throw new Error('No scenes were generated. Try rephrasing or expanding your lyrics.')
       }
       await replaceScenes(sceneList)
 
@@ -519,7 +520,19 @@ export default function FreksFramePage() {
           </div>
 
           {/* ── Render / export panel ── */}
-          <SectionHeading>Renders &amp; Export</SectionHeading>
+          <SectionHeading
+            action={
+              <button
+                onClick={() => reloadRenders()}
+                className="rounded px-2 py-1 text-xs text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                title="Refresh render status"
+              >
+                ↻ Refresh
+              </button>
+            }
+          >
+            Renders &amp; Export
+          </SectionHeading>
 
           <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
             {/* Queue new render */}
@@ -540,7 +553,7 @@ export default function FreksFramePage() {
                 disabled={scenes.length === 0 || queueing}
                 className="w-full rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {queueing ? 'Queuing…' : '🎬 Queue Render'}
+                {queueing ? 'Starting render…' : '🎬 Queue Render'}
               </button>
               {scenes.length === 0 && (
                 <p className="mt-2 text-xs text-gray-400">Generate a storyboard first.</p>
@@ -561,26 +574,45 @@ export default function FreksFramePage() {
               ) : (
                 <div className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
                   {renders.map((r) => (
-                    <div key={r.id} className="flex items-center justify-between px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <StatusBadge status={r.status} />
-                        <span className="text-sm text-gray-700 uppercase">{r.format}</span>
+                    <div key={r.id} className="px-4 py-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <StatusBadge status={r.status} />
+                          <span className="text-sm font-medium text-gray-700 uppercase">{r.format}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {r.render_url && (
+                            <a
+                              href={r.render_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs font-medium text-indigo-600 hover:underline"
+                            >
+                              Download
+                            </a>
+                          )}
+                          <span className="text-xs text-gray-400">
+                            {new Date(r.created_at).toLocaleString()}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        {r.render_url && (
+                      {r.manifest_url && !r.render_url && (
+                        <p className="mt-1 text-xs text-gray-400">
+                          Manifest ready —{' '}
                           <a
-                            href={r.render_url}
+                            href={r.manifest_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-xs font-medium text-indigo-600 hover:underline"
+                            className="text-indigo-500 hover:underline"
                           >
-                            Download
+                            view manifest
                           </a>
-                        )}
-                        <span className="text-xs text-gray-400">
-                          {new Date(r.created_at).toLocaleString()}
-                        </span>
-                      </div>
+                          {' '}(attach a render worker to produce the final video)
+                        </p>
+                      )}
+                      {r.error && (
+                        <p className="mt-1 text-xs text-red-500">Error: {r.error}</p>
+                      )}
                     </div>
                   ))}
                 </div>
