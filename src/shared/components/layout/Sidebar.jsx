@@ -7,6 +7,7 @@ const navItems = [
   { to: '/telemarketing', label: 'Telemarketing' },
   { to: '/dotmail', label: 'Dotmail' },
   { to: '/analytics', label: 'Analytics' },
+  { to: '/freksframe', label: 'FreksFrame' },
 ]
 
 export function Sidebar() {
