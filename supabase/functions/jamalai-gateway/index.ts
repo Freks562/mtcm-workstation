@@ -125,6 +125,10 @@ Rules:
 const ASSIST_FALLBACK = `You are an AI assistant for the MTCM Workstation.
 Help the user with their request concisely and professionally.`
 
+// Storyboard generation AI parameters
+const STORYBOARD_MAX_TOKENS = 2048
+const STORYBOARD_TEMPERATURE = 0.6
+
 // ── FreksFrame structured-output handler ──────────────────────────────────────
 //
 // For module=freksframe + task=generate_storyboard the AI must return a JSON
@@ -150,8 +154,8 @@ async function generateStoryboard(
     apiKey,
     baseUrl,
     model,
-    2048,
-    0.6,
+    STORYBOARD_MAX_TOKENS,
+    STORYBOARD_TEMPERATURE,
   )
 
   if ('error' in aiResult) throw aiResult.error

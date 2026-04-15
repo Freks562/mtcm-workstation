@@ -79,5 +79,58 @@ export function useFreksScenes(projectId) {
     return data ?? []
   }
 
-  return { scenes, loading, error, load, createScene, updateScene, deleteScene, replaceScenes }
+  // Invoke freksframe-generate-scene for a single scene.
+  // Optimistically marks the scene 'generating' in local state, then reloads
+  // after the edge function completes to reflect the final status + image_url.
+  async function generateScene(sceneId) {
+    // Optimistic local update so the UI shows 'generating' immediately
+    setScenes((prev) =>
+      prev.map((s) => (s.id === sceneId ? { ...s, status: 'generating' } : s))
+    )
+
+    const { error: fnError } = await supabase.functions.invoke(
+      'freksframe-generate-scene',
+      { body: { scene_id: sceneId } },
+    )
+
+    if (fnError) {
+      // Revert to previous state on error and surface the message
+      await load()
+      throw new Error(`Image generation failed: ${fnError.message}`)
+    }
+
+    // Reload to pick up image_url + final status from DB
+    await load()
+  }
+
+  // Invoke freksframe-generate-scene for every scene in the current project
+  // that does not yet have an image.  Continues past individual failures and
+  // throws a summary error at the end if any scenes failed.
+  async function generateAllScenes() {
+    const pending = scenes.filter((s) => !s.image_url)
+    const failures = []
+    for (const scene of pending) {
+      try {
+        await generateScene(scene.id)
+      } catch (err) {
+        failures.push(`Scene ${scene.order_index + 1}: ${err.message}`)
+      }
+    }
+    if (failures.length) {
+      throw new Error(`${failures.length} scene(s) failed:\n${failures.join('\n')}`)
+    }
+  }
+
+  return {
+    scenes,
+    loading,
+    error,
+    load,
+    createScene,
+    updateScene,
+    deleteScene,
+    replaceScenes,
+    generateScene,
+    generateAllScenes,
+  }
 }

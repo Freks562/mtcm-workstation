@@ -142,7 +142,7 @@ export default function FreksFramePage() {
   const [selectedId, setSelectedId] = useState(null)
   const selectedProject = projects.find((p) => p.id === selectedId) ?? null
 
-  const { scenes, loading: scenesLoading, error: scenesError, replaceScenes } =
+  const { scenes, loading: scenesLoading, error: scenesError, replaceScenes, generateScene, generateAllScenes } =
     useFreksScenes(selectedId)
   const { renders, loading: rendersLoading, error: rendersError, createRender, load: reloadRenders } =
     useFreksRenders(selectedId)
@@ -165,6 +165,14 @@ export default function FreksFramePage() {
   const [queueing, setQueueing] = useState(false)
   const [queueError, setQueueError] = useState(null)
   const [deleteError, setDeleteError] = useState(null)
+
+  // Per-scene image generation state: Set of scene IDs currently generating
+  const [generatingScenes, setGeneratingScenes] = useState(new Set())
+  const [sceneGenError, setSceneGenError] = useState(null)
+  const [generatingAll, setGeneratingAll] = useState(false)
+
+  // Derived: true when every scene already has an image
+  const allScenesHaveImages = scenes.length > 0 && scenes.every((s) => !!s.image_url)
 
   // Sync local state when the selected project changes
   function selectProject(project) {
@@ -272,6 +280,34 @@ export default function FreksFramePage() {
       setQueueError(err.message)
     } finally {
       setQueueing(false)
+    }
+  }
+
+  async function handleGenerateSceneImage(sceneId) {
+    setSceneGenError(null)
+    setGeneratingScenes((prev) => { const s = new Set(prev); s.add(sceneId); return s })
+    try {
+      await generateScene(sceneId)
+    } catch (err) {
+      setSceneGenError(err.message)
+    } finally {
+      setGeneratingScenes((prev) => {
+        const next = new Set(prev)
+        next.delete(sceneId)
+        return next
+      })
+    }
+  }
+
+  async function handleGenerateAllSceneImages() {
+    setSceneGenError(null)
+    setGeneratingAll(true)
+    try {
+      await generateAllScenes()
+    } catch (err) {
+      setSceneGenError(err.message)
+    } finally {
+      setGeneratingAll(false)
     }
   }
 
@@ -469,7 +505,24 @@ export default function FreksFramePage() {
 
             {/* ── Right: scene list ── */}
             <div className="lg:col-span-2">
-              <SectionHeading>Scenes</SectionHeading>
+              <SectionHeading
+                action={
+                  scenes.length > 0 && (
+                    <button
+                      onClick={handleGenerateAllSceneImages}
+                      disabled={generatingAll || allScenesHaveImages}
+                      className="rounded bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      title="Generate images for all scenes that don't have one yet"
+                    >
+                      {generatingAll ? 'Generating…' : '🖼 Generate All Images'}
+                    </button>
+                  )
+                }
+              >
+                Scenes
+              </SectionHeading>
+
+              <InlineError message={sceneGenError} />
 
               {scenesLoading ? (
                 <p className="text-sm text-gray-500">Loading scenes…</p>
@@ -484,36 +537,59 @@ export default function FreksFramePage() {
                 </Card>
               ) : (
                 <div className="space-y-3">
-                  {scenes.map((scene, i) => (
-                    <Card key={scene.id}>
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-500">
-                          Scene {i + 1}
-                        </span>
-                        <StatusBadge status={scene.status} map={SCENE_STATUS_BADGE} />
-                      </div>
-
-                      {scene.image_url ? (
-                        <img
-                          src={scene.image_url}
-                          alt={`Scene ${i + 1}`}
-                          className="mb-3 w-full rounded object-cover"
-                          style={{ maxHeight: 180 }}
-                        />
-                      ) : (
-                        <div className="mb-3 flex h-24 items-center justify-center rounded border border-dashed border-gray-200 bg-gray-50">
-                          <span className="text-xs text-gray-300">No image yet</span>
+                  {scenes.map((scene, i) => {
+                    const isGenerating = generatingScenes.has(scene.id) || scene.status === 'generating'
+                    const hasImage = !!scene.image_url
+                    return (
+                      <Card key={scene.id}>
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-xs font-semibold text-gray-500">
+                            Scene {i + 1}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <StatusBadge status={scene.status} map={SCENE_STATUS_BADGE} />
+                            <button
+                              onClick={() => handleGenerateSceneImage(scene.id)}
+                              disabled={isGenerating}
+                              className={cn(
+                                'rounded px-2 py-0.5 text-xs font-medium transition-colors',
+                                hasImage
+                                  ? 'border border-violet-200 text-violet-600 hover:bg-violet-50 disabled:opacity-50'
+                                  : 'bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50'
+                              )}
+                              title={hasImage ? 'Regenerate image' : 'Generate image'}
+                            >
+                              {isGenerating ? '…' : hasImage ? '↺ Regenerate' : '🖼 Generate'}
+                            </button>
+                          </div>
                         </div>
-                      )}
 
-                      <p className="mb-1 text-sm text-gray-800">{scene.description}</p>
-                      {scene.visual_prompt && (
-                        <p className="text-xs text-gray-400 italic">
-                          Prompt: {scene.visual_prompt}
-                        </p>
-                      )}
-                    </Card>
-                  ))}
+                        {isGenerating ? (
+                          <div className="mb-3 flex h-24 items-center justify-center rounded border border-dashed border-violet-200 bg-violet-50">
+                            <span className="text-xs text-violet-400">Generating image…</span>
+                          </div>
+                        ) : hasImage ? (
+                          <img
+                            src={scene.image_url}
+                            alt={`Scene ${i + 1}`}
+                            className="mb-3 w-full rounded object-cover"
+                            style={{ maxHeight: 180 }}
+                          />
+                        ) : (
+                          <div className="mb-3 flex h-24 items-center justify-center rounded border border-dashed border-gray-200 bg-gray-50">
+                            <span className="text-xs text-gray-300">No image yet</span>
+                          </div>
+                        )}
+
+                        <p className="mb-1 text-sm text-gray-800">{scene.description}</p>
+                        {scene.visual_prompt && (
+                          <p className="text-xs text-gray-400 italic">
+                            Prompt: {scene.visual_prompt}
+                          </p>
+                        )}
+                      </Card>
+                    )
+                  })}
                 </div>
               )}
             </div>
