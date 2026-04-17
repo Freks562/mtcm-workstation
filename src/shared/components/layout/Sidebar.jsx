@@ -2,12 +2,13 @@ import { NavLink } from 'react-router-dom'
 import { cn } from '../../utils/cn.js'
 
 const navItems = [
-  { to: '/command-center', label: 'Command Center' },
-  { to: '/crm', label: 'CRM' },
-  { to: '/telemarketing', label: 'Telemarketing' },
-  { to: '/dotmail', label: 'Dotmail' },
-  { to: '/analytics', label: 'Analytics' },
-  { to: '/freksframe', label: 'FreksFrame' },
+  { to: '/command-center',  label: 'Command Center' },
+  { to: '/crm',             label: 'CRM' },
+  { to: '/telemarketing',   label: 'Telemarketing' },
+  { to: '/dotmail',         label: 'Dotmail' },
+  { to: '/analytics',       label: 'Analytics' },
+  { to: '/freksframe',      label: 'FreksFrame' },
+  { to: '/va-opportunities', label: 'VA Opportunities' },
 ]
 
 export function Sidebar() {

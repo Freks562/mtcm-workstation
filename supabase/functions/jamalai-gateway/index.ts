@@ -106,6 +106,14 @@ You help interpret CRM pipeline metrics, call volume trends, email campaign perf
 and overall workstation activity. Summarize key insights and highlight anomalies.
 Be concise and use plain language.`,
 
+  grants: `You are a VA Grants and Opportunities assistant for the MTCM Workstation.
+You help users understand VA funding announcements, grants, contracts, and programs from
+the Department of Veterans Affairs and related federal agencies.
+When given an opportunity record, explain what it is, who qualifies, likely next steps
+to apply or partner, and how it connects to veteran contacts or CRM deals.
+When given a list of contacts, identify which veterans may benefit most and why.
+Be specific, practical, and encouraging. Use plain language — no jargon.`,
+
   freksframe: `You are a creative director AI for FreksFrame, the AI lyric-video storyboard studio
 inside the MTCM Workstation.
 When asked to generate a storyboard, you receive song lyrics and a visual style.

@@ -16,6 +16,7 @@ const MODULE_LABELS = {
   telemarketing: 'Telemarketing Assistant',
   dotmail: 'Dotmail Assistant',
   analytics: 'Analytics Assistant',
+  grants: 'VA Grants Assistant',
 }
 
 const MODULE_PLACEHOLDERS = {
@@ -23,6 +24,7 @@ const MODULE_PLACEHOLDERS = {
   telemarketing: 'e.g. "Write a 30-second cold-call opener", "Best script for a callback"',
   dotmail: 'e.g. "Write a subject line for a re-engagement campaign", "Draft a welcome email"',
   analytics: 'e.g. "What does my pipeline look like?", "Highlight any anomalies this week"',
+  grants: 'e.g. "Who on my team should apply for this grant?", "Summarize eligibility requirements"',
 }
 
 export function JamalAIPanel({ module, placeholder }) {

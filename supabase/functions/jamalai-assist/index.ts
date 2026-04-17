@@ -29,7 +29,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-type Module = 'crm' | 'telemarketing' | 'dotmail' | 'analytics'
+type Module = 'crm' | 'telemarketing' | 'dotmail' | 'analytics' | 'grants'
 
 const MODULE_SYSTEM_PROMPTS: Record<Module, string> = {
   crm: `You are a CRM assistant for the MTCM Workstation.
@@ -52,6 +52,14 @@ and persuasive. Keep subject lines under 60 characters.`,
 You help interpret CRM pipeline metrics, call volume trends, email campaign performance,
 and overall workstation activity. When given data, summarize key insights and highlight
 anomalies or opportunities. Be concise and use plain language.`,
+
+  grants: `You are a VA Grants and Opportunities assistant for the MTCM Workstation.
+You help users understand VA funding announcements, grants, contracts, and programs from
+the Department of Veterans Affairs and related federal agencies.
+When given an opportunity record, explain what it is, who qualifies, likely next steps
+to apply or partner, and how it connects to veteran contacts or CRM deals.
+When given a list of contacts, identify which veterans may benefit most and why.
+Be specific, practical, and encouraging. Use plain language — no jargon.`,
 }
 
 const FALLBACK_SYSTEM_PROMPT = `You are an AI assistant for the MTCM Workstation.
@@ -79,7 +87,7 @@ serve(async (req) => {
     task = body?.task
     data = body?.data
     if (!module) {
-      throw new Error('module is required (crm | telemarketing | dotmail | analytics)')
+      throw new Error('module is required (crm | telemarketing | dotmail | analytics | grants)')
     }
     if (typeof task !== 'string' || task.trim() === '') {
       throw new Error('task is required')
