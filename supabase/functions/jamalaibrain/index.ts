@@ -1,5 +1,5 @@
 // Supabase Edge Function: jamalaibrain
-// ────────────────────────────────────────────────────────────────────────────
+// ----------------------------------------------------------------------------
 // AI brain endpoint for the MTCM workstation.  Receives a user prompt and an
 // optional system context string, forwards them to an OpenAI-compatible chat
 // completion API, and returns a structured JSON response.
@@ -10,14 +10,14 @@
 //   })
 //
 // Required Supabase secrets (set via `supabase secrets set`):
-//   AI_API_KEY    – API key for your chosen provider (OpenAI, Groq, etc.)
-//   AI_BASE_URL   – Base URL of the OpenAI-compatible endpoint
+//   AI_API_KEY    - API key for your chosen provider (OpenAI, Groq, etc.)
+//   AI_BASE_URL   - Base URL of the OpenAI-compatible endpoint
 //                   e.g. https://api.openai.com/v1  or  https://api.groq.com/openai/v1
-//   AI_MODEL      – Model name, e.g. gpt-4o-mini  or  llama3-8b-8192
+//   AI_MODEL      - Model name, e.g. gpt-4o-mini  or  llama3-8b-8192
 //
 // CORS: this function handles the browser preflight so it can be called
 // directly from the Vite dev server and production frontend.
-// ────────────────────────────────────────────────────────────────────────────
+// ----------------------------------------------------------------------------
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 
@@ -34,7 +34,7 @@ Respond concisely and professionally. When asked to take an action you cannot pe
 directly, explain what the user should do in the UI instead.`
 
 serve(async (req) => {
-  // ── Handle CORS preflight ──────────────────────────────────────────────
+  // -- Handle CORS preflight ----------------------------------------------
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS })
   }
@@ -46,7 +46,7 @@ serve(async (req) => {
     )
   }
 
-  // ── Read and validate request body ────────────────────────────────────
+  // -- Read and validate request body ------------------------------------
   let prompt: string
   let context: string | undefined
   try {
@@ -63,7 +63,7 @@ serve(async (req) => {
     )
   }
 
-  // ── Validate required secrets ──────────────────────────────────────────
+  // -- Validate required secrets ------------------------------------------
   const apiKey = Deno.env.get('AI_API_KEY')
   const baseUrl = Deno.env.get('AI_BASE_URL') ?? 'https://api.openai.com/v1'
   const model = Deno.env.get('AI_MODEL') ?? 'gpt-4o-mini'
@@ -75,7 +75,7 @@ serve(async (req) => {
     )
   }
 
-  // ── Build messages array ───────────────────────────────────────────────
+  // -- Build messages array -----------------------------------------------
   const messages: { role: string; content: string }[] = [
     { role: 'system', content: SYSTEM_PROMPT },
   ]
@@ -86,7 +86,7 @@ serve(async (req) => {
 
   messages.push({ role: 'user', content: prompt.trim() })
 
-  // ── Call the AI provider ───────────────────────────────────────────────
+  // -- Call the AI provider -----------------------------------------------
   let aiResponse: Response
   try {
     aiResponse = await fetch(`${baseUrl}/chat/completions`, {
@@ -121,7 +121,7 @@ serve(async (req) => {
     )
   }
 
-  // ── Extract and return the reply ───────────────────────────────────────
+  // -- Extract and return the reply ---------------------------------------
   const completion = await aiResponse.json()
   const reply: string = completion?.choices?.[0]?.message?.content ?? ''
 

@@ -1,12 +1,12 @@
 // Supabase Edge Function: jamalai-gateway
-// ────────────────────────────────────────────────────────────────────────────
+// ----------------------------------------------------------------------------
 // Single entry-point gateway for all JamalAI requests.
 //
 // The frontend can call one function instead of choosing between jamalaibrain
 // and jamalai-assist.  The gateway inspects the payload and routes internally:
 //
-//   • If `module` is present → delegates to jamalai-assist logic (module-aware)
-//   • Otherwise              → delegates to jamalaibrain logic (general chat)
+//   * If `module` is present -> delegates to jamalai-assist logic (module-aware)
+//   * Otherwise              -> delegates to jamalaibrain logic (general chat)
 //
 // This avoids extra network hops; the routing happens inside a single
 // Deno process rather than chaining Edge Function calls.
@@ -23,10 +23,10 @@
 //   })
 //
 // Required Supabase secrets (same set as the other AI functions):
-//   AI_API_KEY   – API key for your chosen provider
-//   AI_BASE_URL  – Base URL of the OpenAI-compatible endpoint
-//   AI_MODEL     – Model name
-// ────────────────────────────────────────────────────────────────────────────
+//   AI_API_KEY   - API key for your chosen provider
+//   AI_BASE_URL  - Base URL of the OpenAI-compatible endpoint
+//   AI_MODEL     - Model name
+// ----------------------------------------------------------------------------
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 
@@ -36,7 +36,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-// ── Shared helpers ─────────────────────────────────────────────────────────
+// -- Shared helpers ---------------------------------------------------------
 
 type Message = { role: string; content: string }
 
@@ -76,7 +76,7 @@ async function callAI(
   return { reply }
 }
 
-// ── Brain system prompt ────────────────────────────────────────────────────
+// -- Brain system prompt ----------------------------------------------------
 
 const BRAIN_SYSTEM = `You are JamalAIBrain, the intelligent assistant for the MTCM Workstation.
 You help operations teams manage CRM contacts and deals, run telemarketing campaigns,
@@ -84,7 +84,7 @@ draft and send emails through Dotmail, and understand analytics data.
 Respond concisely and professionally. When asked to take an action you cannot perform
 directly, explain what the user should do in the UI instead.`
 
-// ── Assist system prompts ──────────────────────────────────────────────────
+// -- Assist system prompts --------------------------------------------------
 
 const ASSIST_PROMPTS: Record<string, string> = {
   crm: `You are a CRM assistant for the MTCM Workstation.
@@ -109,10 +109,10 @@ Be concise and use plain language.`,
   freksframe: `You are a creative director AI for FreksFrame, the AI lyric-video storyboard studio
 inside the MTCM Workstation.
 When asked to generate a storyboard, you receive song lyrics and a visual style.
-Your job is to break the lyrics into logical scenes and return a JSON array – nothing else.
+Your job is to break the lyrics into logical scenes and return a JSON array - nothing else.
 Each element must have exactly two keys:
-  "description"   – one sentence describing what happens / is shown in the scene
-  "visual_prompt" – a concise image-generation prompt (<= 40 words) matching the style
+  "description"   - one sentence describing what happens / is shown in the scene
+  "visual_prompt" - a concise image-generation prompt (<= 40 words) matching the style
 
 Rules:
 - Return ONLY a raw JSON array. Do NOT wrap it in markdown code fences.
@@ -129,7 +129,7 @@ Help the user with their request concisely and professionally.`
 const STORYBOARD_MAX_TOKENS = 2048
 const STORYBOARD_TEMPERATURE = 0.6
 
-// ── FreksFrame structured-output handler ──────────────────────────────────────
+// -- FreksFrame structured-output handler --------------------------------------
 //
 // For module=freksframe + task=generate_storyboard the AI must return a JSON
 // array of scenes.  This function calls the AI, strips any accidental markdown
@@ -170,7 +170,7 @@ async function generateStoryboard(
   try {
     parsed = JSON.parse(cleaned)
   } catch (_) {
-    const preview = raw.length > 300 ? `${raw.slice(0, 300)}…` : raw
+    const preview = raw.length > 300 ? `${raw.slice(0, 300)}...` : raw
     throw `AI returned malformed JSON. Raw response:\n${preview}`
   }
 
@@ -195,7 +195,7 @@ async function generateStoryboard(
   return { scenes, raw }
 }
 
-// ── Main handler ───────────────────────────────────────────────────────────
+// -- Main handler -----------------------------------------------------------
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -209,7 +209,7 @@ serve(async (req) => {
     )
   }
 
-  // ── Parse body ─────────────────────────────────────────────────────────
+  // -- Parse body ---------------------------------------------------------
   let body: Record<string, unknown>
   try {
     body = await req.json()
@@ -220,7 +220,7 @@ serve(async (req) => {
     )
   }
 
-  // ── Validate secrets ───────────────────────────────────────────────────
+  // -- Validate secrets ---------------------------------------------------
   const apiKey = Deno.env.get('AI_API_KEY')
   const baseUrl = Deno.env.get('AI_BASE_URL') ?? 'https://api.openai.com/v1'
   const model = Deno.env.get('AI_MODEL') ?? 'gpt-4o-mini'
@@ -234,7 +234,7 @@ serve(async (req) => {
 
   const module = typeof body.module === 'string' ? body.module : null
 
-  // ── Route: module-assist ───────────────────────────────────────────────
+  // -- Route: module-assist -----------------------------------------------
   if (module !== null) {
     const task = typeof body.task === 'string' ? body.task.trim() : ''
     if (!task) {
@@ -244,7 +244,7 @@ serve(async (req) => {
       )
     }
 
-    // ── FreksFrame: generate_storyboard ─────────────────────────────────
+    // -- FreksFrame: generate_storyboard ---------------------------------
     if (module === 'freksframe' && task === 'generate_storyboard') {
       const data = body.data as Record<string, unknown> | undefined
       const lyrics = typeof data?.lyrics === 'string' ? data.lyrics.trim() : ''
@@ -277,7 +277,7 @@ serve(async (req) => {
       }
     }
 
-    // ── All other module-assist requests ─────────────────────────────────
+    // -- All other module-assist requests ---------------------------------
     const systemPrompt = ASSIST_PROMPTS[module] ?? ASSIST_FALLBACK
     const userContent = body.data
       ? `${task}\n\nContext data:\n${JSON.stringify(body.data, null, 2)}`
@@ -302,7 +302,7 @@ serve(async (req) => {
     )
   }
 
-  // ── Route: brain (general chat) ────────────────────────────────────────
+  // -- Route: brain (general chat) ----------------------------------------
   const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : ''
   if (!prompt) {
     return new Response(

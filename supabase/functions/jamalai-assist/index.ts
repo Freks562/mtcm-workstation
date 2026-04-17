@@ -1,5 +1,5 @@
 // Supabase Edge Function: jamalai-assist
-// ────────────────────────────────────────────────────────────────────────────
+// ----------------------------------------------------------------------------
 // Module-specific AI assistant for the MTCM Workstation.  Provides focused,
 // context-aware AI help for each module (CRM, Telemarketing, Dotmail,
 // Analytics).  Unlike jamalaibrain (general chat), this function receives a
@@ -16,10 +16,10 @@
 //   })
 //
 // Required Supabase secrets (same as jamalaibrain):
-//   AI_API_KEY   – API key for your chosen provider
-//   AI_BASE_URL  – Base URL of the OpenAI-compatible endpoint
-//   AI_MODEL     – Model name
-// ────────────────────────────────────────────────────────────────────────────
+//   AI_API_KEY   - API key for your chosen provider
+//   AI_BASE_URL  - Base URL of the OpenAI-compatible endpoint
+//   AI_MODEL     - Model name
+// ----------------------------------------------------------------------------
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 
@@ -69,7 +69,7 @@ serve(async (req) => {
     )
   }
 
-  // ── Parse request ──────────────────────────────────────────────────────
+  // -- Parse request ------------------------------------------------------
   let module: string
   let task: string
   let data: unknown
@@ -91,7 +91,7 @@ serve(async (req) => {
     )
   }
 
-  // ── Validate secrets ───────────────────────────────────────────────────
+  // -- Validate secrets ---------------------------------------------------
   const apiKey = Deno.env.get('AI_API_KEY')
   const baseUrl = Deno.env.get('AI_BASE_URL') ?? 'https://api.openai.com/v1'
   const model = Deno.env.get('AI_MODEL') ?? 'gpt-4o-mini'
@@ -103,7 +103,7 @@ serve(async (req) => {
     )
   }
 
-  // ── Build messages ─────────────────────────────────────────────────────
+  // -- Build messages -----------------------------------------------------
   const systemPrompt = MODULE_SYSTEM_PROMPTS[module as Module] ?? FALLBACK_SYSTEM_PROMPT
 
   const userContent = data
@@ -115,7 +115,7 @@ serve(async (req) => {
     { role: 'user', content: userContent },
   ]
 
-  // ── Call AI provider ───────────────────────────────────────────────────
+  // -- Call AI provider ---------------------------------------------------
   let aiResponse: Response
   try {
     aiResponse = await fetch(`${baseUrl}/chat/completions`, {
