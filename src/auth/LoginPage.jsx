@@ -19,15 +19,24 @@ export function LoginPage() {
     })
   }
 
+<<<<<<< HEAD
   async function handleGithubSignIn() {
     setError(null)
     const { error } = await supabase.auth.signInWithOAuth({
+=======
+  async function handleGitHubSignIn() {
+    setError(null)
+    await supabase.auth.signInWithOAuth({
+>>>>>>> copilot/fix-fetch-profile-hanging
       provider: 'github',
       options: {
         redirectTo: window.location.origin,
       },
     })
+<<<<<<< HEAD
     if (error) setError(error.message)
+=======
+>>>>>>> copilot/fix-fetch-profile-hanging
   }
 
   async function handleSubmit(e) {
@@ -97,7 +106,11 @@ export function LoginPage() {
 
         <button
           type="button"
+<<<<<<< HEAD
           onClick={handleGithubSignIn}
+=======
+          onClick={handleGitHubSignIn}
+>>>>>>> copilot/fix-fetch-profile-hanging
           className="w-full rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           Sign in with GitHub
