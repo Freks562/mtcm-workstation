@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from 'react'
+import { supabase } from '../../lib/supabase.js'
+import { requireUser } from '../../shared/utils/requireAuth.js'
 
 const readinessItems = [
   { key: 'dd214', label: 'DD-214 or proof of service' },
@@ -9,10 +11,11 @@ const readinessItems = [
   { key: 'contactInfo', label: 'Current contact info confirmed' },
 ]
 
-const initialChecklist = readinessItems.reduce((acc, item) => {
-  acc[item.key] = false
-  return acc
-}, {})
+const buildInitialChecklist = () =>
+  readinessItems.reduce((acc, item) => {
+    acc[item.key] = false
+    return acc
+  }, {})
 
 export default function VetRightsPage() {
   const [form, setForm] = useState({
@@ -25,8 +28,11 @@ export default function VetRightsPage() {
     desiredOutcome: '',
   })
 
-  const [checklist, setChecklist] = useState(initialChecklist)
+  const [checklist, setChecklist] = useState(buildInitialChecklist())
   const [files, setFiles] = useState([])
+  const [saving, setSaving] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [submitSuccess, setSubmitSuccess] = useState('')
 
   const readinessScore = useMemo(() => {
     const total = readinessItems.length
@@ -47,9 +53,71 @@ export default function VetRightsPage() {
     setFiles(Array.from(e.target.files || []))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    alert('VetRights intake captured locally. Next step: connect this form to Supabase.')
+    setSubmitError('')
+    setSubmitSuccess('')
+    setSaving(true)
+
+    try {
+      const user = await requireUser()
+
+      const payload = {
+        created_by: user.id,
+        full_name: form.fullName,
+        email: form.email,
+        phone: form.phone,
+        claim_type: form.claimType,
+        urgency: form.urgency,
+        case_summary: form.caseSummary,
+        desired_outcome: form.desiredOutcome,
+        readiness_score: readinessScore,
+        checklist,
+      }
+
+      const { data, error } = await supabase
+        .from('vetrights_intakes')
+        .insert(payload)
+        .select('id')
+        .single()
+
+      if (error) throw error
+      if (!data?.id) throw new Error('Intake saved but no intake ID returned.')
+
+      setSubmitSuccess(`VetRights intake saved. Intake ID: ${data.id}`)
+
+      setForm({
+        fullName: '',
+        email: '',
+        phone: '',
+        claimType: 'va-disability',
+        urgency: 'standard',
+        caseSummary: '',
+        desiredOutcome: '',
+      })
+      setChecklist(buildInitialChecklist())
+      setFiles([])
+    } catch (err) {
+      setSubmitError(err?.message || 'Failed to save VetRights intake.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function handleReset() {
+    setForm({
+      fullName: '',
+      email: '',
+      phone: '',
+      claimType: 'va-disability',
+      urgency: 'standard',
+      caseSummary: '',
+      desiredOutcome: '',
+    })
+    setChecklist(buildInitialChecklist())
+    setFiles([])
+    setSubmitError('')
+    setSubmitSuccess('')
   }
 
   return (
@@ -197,30 +265,31 @@ export default function VetRightsPage() {
             <div className="flex gap-3">
               <button
                 type="submit"
+                disabled={saving}
                 className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
               >
-                Save Intake
+                {saving ? 'Saving...' : 'Save Intake'}
               </button>
               <button
                 type="button"
                 className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                onClick={() => {
-                  setForm({
-                    fullName: '',
-                    email: '',
-                    phone: '',
-                    claimType: 'va-disability',
-                    urgency: 'standard',
-                    caseSummary: '',
-                    desiredOutcome: '',
-                  })
-                  setChecklist(initialChecklist)
-                  setFiles([])
-                }}
+                onClick={handleReset}
               >
                 Reset
               </button>
             </div>
+
+            {submitError && (
+              <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {submitError}
+              </div>
+            )}
+
+            {submitSuccess && (
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                {submitSuccess}
+              </div>
+            )}
           </form>
         </div>
 
