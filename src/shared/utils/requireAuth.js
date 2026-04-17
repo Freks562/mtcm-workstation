@@ -1,5 +1,5 @@
 export async function requireUser() {
-  const { supabase } = await import('../../lib/supabaseClient.js')
+  const { supabase } = await import('../../lib/supabase.js')
   const {
     data: { user },
     error,
