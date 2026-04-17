@@ -190,7 +190,7 @@ export default function FreksFramePage() {
   async function handleCreateProject(fields) {
     setSaving(true)
     try {
-      const project = await createProject(fields, actorId)
+      const project = await createProject({ ...fields, user_id: actorId }, actorId)
       setShowNewProject(false)
       selectProject(project)
     } finally {
