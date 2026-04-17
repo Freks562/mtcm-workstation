@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from '../auth/ProtectedRoute.jsx'
-import { LoginPage } from '../auth/LoginPage.jsx'
+import LoginPage from '../auth/LoginPage.jsx'
 import { AppShell } from '../shared/components/layout/AppShell.jsx'
 import CommandCenterPage from '../modules/command-center/page.jsx'
 import CrmPage from '../modules/crm/page.jsx'
