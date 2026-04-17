@@ -30,3 +30,9 @@ MTCM proposes a practical, human-in-control approach to AI-assisted municipal op
 ## 5. Suggested positioning statement
 
 “MTCM is interested in AI-assisted municipal operations that reduce employee workload, improve service quality, and preserve human decision-making, with strong attention to governance, security, and public-records compliance.”
+
+## 6. First-draft response set
+
+- `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/opportunities/st-petersburg-ai-rfi/first-draft-response.md`
+- `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/opportunities/st-petersburg-ai-rfi/internal-email-summary.md`
+- `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/opportunities/st-petersburg-ai-rfi/questions-for-city.md`
