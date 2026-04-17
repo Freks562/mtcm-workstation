@@ -2,12 +2,22 @@
 
 ## 1. Executive Summary
 
-- `mtcm-workstation` is the active clean repository for the workstation stack.
-- Current production surface area exceeds current repo-truth coverage.
-- Critical runtime state remains outside repository-managed truth, including dashboard/provider/secrets/deploy configuration.
-- This document is a migration control artifact to reduce assumption-driven implementation.
+- `mtcm-workstation` is the **final Supabase target** and source of truth after consolidation.
+- `mtcmglassworkstation` is **legacy source truth** to be extracted and compared, not retained as final backend authority.
+- Production runtime state currently includes dashboard-managed dependencies (secrets, provider config, deployed function state, scheduler state) that must be parity-checked before cutover.
 
-## 2. System Inventory Table
+## 2. Core Audit Artifacts (live parity worksheets)
+
+Use these docs together for controlled consolidation:
+
+1. Secret inventory worksheet:
+   - `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/secret-matrix.md`
+2. Table/bucket/RLS + function/scheduler comparison worksheet:
+   - `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/supabase-parity-checklist.md`
+3. Final production cutover checklist:
+   - `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/cutover-checklist.md`
+
+## 3. System Inventory Table
 
 | system/feature | repo status | production/live status | backend truth location | storage/bucket dependency | auth dependency | migration status | notes |
 |---|---|---|---|---|---|---|---|
@@ -29,7 +39,7 @@
 | edge functions | Present (`/home/runner/work/mtcm-workstation/mtcm-workstation/supabase/functions/*`) | Partial (deploy/runtime external) | Repo function code + external deployed state | Indirect (function-dependent) | Function auth context + service role usage | P0 harden | Deployment, secrets, and runtime truth not fully in repo |
 | supabase storage / buckets | Partial (freks-assets migration-managed; vetrights bucket not migration-managed) | Partial | `013_freksframe.sql` + code refs | Yes (`freks-assets`, `vetrights-files`) | Bucket policy access tied to authenticated/service-role policies | P0 harden (with gap closure) | Bucket/state parity incomplete in repo |
 
-## 3. Repo-Truth Gaps
+## 4. Repo-Truth Gaps
 
 Features live or expected in business/public surface but not present as real modules in `mtcm-workstation`:
 
@@ -44,7 +54,7 @@ Additional repo-truth incompleteness:
 - VetRights references DB tables and storage bucket not represented by repo migrations.
 - Ops/Glass Workstation appears broader in provided production context than current `command-center` representation.
 
-## 4. Dashboard-Only Dependencies
+## 5. Dashboard-Only Dependencies
 
 Items likely managed outside repo migrations/functions/config:
 
@@ -56,7 +66,7 @@ Items likely managed outside repo migrations/functions/config:
 - Schedulers/cron for queue/automation execution (e.g., send queue processing cadence)
 - VetRights tables/bucket/policies when not migration-managed (`vetrights_intakes`, `vetrights_evidence`, `vetrights-files`)
 
-## 5. Migration Priorities
+## 6. Migration Priorities
 
 - **P0 = harden what already exists in repo**
   - DotMail production audit + runtime parity
@@ -74,23 +84,18 @@ Items likely managed outside repo migrations/functions/config:
 - **P2 = scaffold secondary modules**
   - Training Lanes migration/scaffold after definition is fixed
 
-## 6. Recommended Order
+## 7. Recommended Order
 
 Strict order:
 
-1. DotMail production audit
-2. VetRights repo-truth completion
-3. Capability Statements migration
-4. Ops / Glass workstation mapping
-5. Veteran Lawn Rescue migration
-6. VetCert migration
-7. Veteran Cybertraining migration
-8. Training Lanes migration
+1. Complete secret parity worksheet (`docs/secret-matrix.md`)
+2. Complete table/bucket/RLS/function/scheduler worksheet (`docs/supabase-parity-checklist.md`)
+3. Resolve all parity drifts required for target readiness
+4. Execute cutover with runbook gates (`docs/cutover-checklist.md`)
 
 Control rules for this phase:
 
-- No feature code yet
-- No router changes
-- No layout changes
-- No invented schemas
-- No assumptions beyond repo evidence + provided audit
+- Docs/worksheet audit first
+- No migrations yet
+- No assumptions beyond repo evidence + verified dashboard inventory
+- Target remains `mtcm-workstation`; legacy is extraction source only
