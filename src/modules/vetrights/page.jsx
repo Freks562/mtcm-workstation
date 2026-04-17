@@ -17,10 +17,10 @@ const buildInitialChecklist = () =>
     return acc
   }, {})
 
-const evidenceInsertStrategies = [
-  {
-    table: 'vetrights_evidence',
-    buildPayload: ({ intakeId, userId, file, storagePath }) => ({
+async function insertEvidenceMetadata({ intakeId, userId, file, storagePath }) {
+  const { error } = await supabase
+    .from('vetrights_evidence')
+    .insert({
       intake_id: intakeId,
       uploaded_by: userId,
       file_name: file.name,
@@ -28,58 +28,11 @@ const evidenceInsertStrategies = [
       bucket: 'vetrights-files',
       content_type: file.type || null,
       file_size: file.size,
-    }),
-  },
-  {
-    table: 'vetrights_evidence_files',
-    buildPayload: ({ intakeId, userId, file, storagePath }) => ({
-      intake_id: intakeId,
-      uploaded_by: userId,
-      file_name: file.name,
-      file_path: storagePath,
-      bucket: 'vetrights-files',
-      content_type: file.type || null,
-      file_size: file.size,
-    }),
-  },
-  {
-    table: 'vetrights_intake_evidence',
-    buildPayload: ({ intakeId, userId, file, storagePath }) => ({
-      intake_id: intakeId,
-      uploaded_by: userId,
-      file_name: file.name,
-      file_path: storagePath,
-      bucket: 'vetrights-files',
-      content_type: file.type || null,
-      file_size: file.size,
-    }),
-  },
-  {
-    table: 'vetrights_evidence',
-    buildPayload: ({ intakeId, userId, file, storagePath }) => ({
-      intake_id: intakeId,
-      created_by: userId,
-      name: file.name,
-      path: storagePath,
-      mime_type: file.type || null,
-      size_bytes: file.size,
-    }),
-  },
-]
+    })
+  if (error) throw error
+}
 
 const sanitizeFileName = (value) => value.replace(/[^a-zA-Z0-9._-]/g, '_')
-
-async function insertEvidenceMetadata({ intakeId, userId, file, storagePath }) {
-  let lastError = null
-  for (const strategy of evidenceInsertStrategies) {
-    const { error } = await supabase
-      .from(strategy.table)
-      .insert(strategy.buildPayload({ intakeId, userId, file, storagePath }))
-    if (!error) return
-    lastError = error
-  }
-  throw lastError || new Error('Failed to insert evidence metadata.')
-}
 
 export default function VetRightsPage() {
   const [form, setForm] = useState({
@@ -160,14 +113,25 @@ export default function VetRightsPage() {
         .single()
 
       if (error) throw error
-      if (!data?.id) throw new Error('Intake saved but no intake ID returned.')
+      if (!data?.id) {
+        throw new Error(
+          'Intake was saved but could not be confirmed. Please contact support if this persists.'
+        )
+      }
 
       const intakeId = data.id
       const uploadFailures = []
       let uploadedCount = 0
 
+      if (files.length > 0 && typeof crypto?.randomUUID !== 'function') {
+        throw new Error(
+          'Your browser does not support secure file uploads. Please update your browser or try a different one.'
+        )
+      }
+
       for (const file of files) {
-        const storagePath = `${intakeId}-${Date.now()}-${sanitizeFileName(file.name)}`
+        const uniqueToken = crypto.randomUUID()
+        const storagePath = `${intakeId}-${uniqueToken}-${sanitizeFileName(file.name)}`
         try {
           const { error: uploadError } = await supabase.storage
             .from('vetrights-files')
@@ -194,7 +158,7 @@ export default function VetRightsPage() {
           `VetRights intake saved. Intake ID: ${intakeId}. Uploaded ${uploadedCount}/${files.length} evidence file(s).`
         )
         setSubmitError(
-          `Intake was saved, but some evidence files failed to upload or register: ${failedList}.`
+          `Intake was saved, but some evidence files failed to upload or save metadata: ${failedList}.`
         )
       } else {
         setSubmitSuccess(
