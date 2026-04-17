@@ -19,6 +19,16 @@ export function LoginPage() {
     })
   }
 
+  async function handleGitHubSignIn() {
+    setError(null)
+    await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    })
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
@@ -82,6 +92,14 @@ export function LoginPage() {
           className="w-full rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           Sign in with Google
+        </button>
+
+        <button
+          type="button"
+          onClick={handleGitHubSignIn}
+          className="w-full rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Sign in with GitHub
         </button>
       </form>
     </div>
