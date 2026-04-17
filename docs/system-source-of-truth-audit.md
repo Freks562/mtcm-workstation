@@ -68,13 +68,71 @@ Items likely managed outside repo migrations/functions/config:
 - Schedulers/cron for queue/automation execution (e.g., send queue processing cadence)
 - VetRights tables/bucket/policies when not migration-managed (`vetrights_intakes`, `vetrights_evidence`, `vetrights-files`)
 
-## 6. Migration Priorities
+## 6. Confirmed Secret Category Inventory (source: `mtcmglassworkstation`)
+
+Confirmed live production secret categories in source:
+
+- Supabase runtime
+- Resend / DotMail mail runtime
+- Gmail OAuth / Gmail integration
+- SMTP / Postmark / SendGrid
+- SAM.gov
+- OpenAI / AI runtime
+- Stripe
+- Twilio
+- Slack alerts
+- Google OAuth
+- Plausible analytics
+- Site/donation URLs
+
+## 7. Secret Migration Classification Matrix
+
+| Secret category | Classification | Reason now | Required manual verification before final decision |
+|---|---|---|---|
+| Supabase runtime | Likely must-migrate | Core app + function runtime dependency | Confirm target has all required runtime keys and project URLs aligned |
+| Resend / DotMail mail runtime | Likely must-migrate | DotMail send path is repo-present and production-relevant | Confirm send-emails runtime path + scheduler + sender identity parity |
+| OpenAI / AI runtime | Likely must-migrate | AI functions are repo-present and secret-backed | Confirm which AI functions are production-active and target-ready |
+| Google OAuth | Requires usage verification | Auth/provider critical if enabled, but must match target auth strategy | Confirm provider enabled state + redirect/callback parity |
+| Gmail OAuth / Gmail integration | Requires usage verification | Could be auth-adjacent or outbound integration; unclear active runtime ownership | Confirm active usage in production flows vs legacy-only |
+| SMTP / Postmark / SendGrid | Requires usage verification | Could overlap with Resend or legacy mail paths | Confirm whether any are actively used by production jobs/functions |
+| SAM.gov | Requires usage verification | Potential external integration dependency | Confirm active function/job usage and runtime binding |
+| Stripe | Requires usage verification | Payments can be critical but repo/runtime linkage must be confirmed | Confirm target runtime use, webhook paths, and live dependency |
+| Twilio | Requires usage verification | Messaging/notifications may be active but not yet repo-parity-confirmed | Confirm active workflow usage and target secret need |
+| Slack alerts | Requires usage verification | Alerting can be operationally important but optional for cutover | Confirm active alert jobs/functions and owner acceptance if deferred |
+| Plausible analytics | Likely safe to retire (pending check) | Usually non-blocking analytics dependency | Confirm target analytics strategy and whether runtime key is still consumed |
+| Site/donation URLs | Likely safe to retire (pending check) | Often config-level and can move to non-secret managed config | Confirm these are not required as protected runtime secrets in target |
+
+## 8. Exact Next Manual Checks Still Required (source + target dashboards)
+
+Run these in order in both projects (`mtcmglassworkstation` source, `mtcm-workstation` target):
+
+1. **Authentication → Providers**
+   - Confirm enabled providers list.
+   - Confirm redirect URL/callback URL parity for active providers.
+   - Confirm site URL behavior expectation for cutover.
+2. **Project Settings → Secrets**
+   - For every confirmed category, mark present/absent only (no values).
+   - For each category, mark: must-migrate / verify / retire.
+3. **Edge Functions**
+   - Map function-level env dependencies to secret categories.
+   - Mark deployed in source vs target; identify unmanaged deployed functions.
+4. **SQL Editor / Scheduler inventory**
+   - Confirm DotMail queue jobs and any production-active feed jobs.
+   - Confirm cadence + auth/header parity for jobs needed in target.
+5. **Repository cross-check**
+   - Validate each “must-migrate” or “verify” category against real repo usage (`supabase/functions`, frontend runtime usage, documented runbooks).
+   - Keep category status as “verification required” until both dashboard evidence and repo evidence agree.
+
+## 9. Updated Migration Priority Order
 
 - **P0 = harden what already exists in repo**
-  - DotMail production audit + runtime parity
-  - VetRights repo-truth completion (migrations/policies/storage parity)
-  - Auth/runtime dependency verification
-  - Edge function + storage parity hardening
+  1. Complete Auth + Secrets worksheet parity (including category classification decisions).
+  2. Complete database/storage/function/scheduler worksheet parity.
+  3. VetRights backend repo-truth completion planning as first implementation target:
+     - VetRights tables migration set
+     - `vetrights-files` bucket migration
+     - VetRights RLS/policy migration coverage
+  4. DotMail/runtime parity finalization after VetRights backend truth is defined.
 
 - **P1 = migrate missing public/business-critical systems**
   - Capability Statements migration
@@ -86,14 +144,16 @@ Items likely managed outside repo migrations/functions/config:
 - **P2 = scaffold secondary modules**
   - Training Lanes migration/scaffold after definition is fixed
 
-## 7. Recommended Order
+## 10. Recommended Order
 
 Strict order:
 
-1. Complete secret parity worksheet (`docs/secret-matrix.md`)
-2. Complete table/bucket/RLS/function/scheduler worksheet (`docs/supabase-parity-checklist.md`)
-3. Resolve all parity drifts required for target readiness
-4. Execute cutover with runbook gates (`docs/cutover-checklist.md`)
+1. Complete secret category classification and parity in `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/secret-matrix.md`
+2. Complete tables/buckets/RLS/functions/schedulers parity in `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/supabase-parity-checklist.md`
+3. Lock VetRights backend gap list from worksheet facts only
+4. Approve migration-safe implementation order (VetRights first)
+5. Resolve blocker parity drifts in target
+6. Execute cutover gates in `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/cutover-checklist.md`
 
 Control rules for this phase:
 
