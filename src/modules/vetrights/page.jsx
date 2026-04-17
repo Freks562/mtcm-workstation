@@ -53,6 +53,20 @@ export default function VetRightsPage() {
     setFiles(Array.from(e.target.files || []))
   }
 
+  function resetFormState() {
+    setForm({
+      fullName: '',
+      email: '',
+      phone: '',
+      claimType: 'va-disability',
+      urgency: 'standard',
+      caseSummary: '',
+      desiredOutcome: '',
+    })
+    setChecklist(buildInitialChecklist())
+    setFiles([])
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setSubmitError('')
@@ -86,17 +100,7 @@ export default function VetRightsPage() {
 
       setSubmitSuccess(`VetRights intake saved. Intake ID: ${data.id}`)
 
-      setForm({
-        fullName: '',
-        email: '',
-        phone: '',
-        claimType: 'va-disability',
-        urgency: 'standard',
-        caseSummary: '',
-        desiredOutcome: '',
-      })
-      setChecklist(buildInitialChecklist())
-      setFiles([])
+      resetFormState()
     } catch (err) {
       setSubmitError(err?.message || 'Failed to save VetRights intake.')
     } finally {
@@ -105,17 +109,7 @@ export default function VetRightsPage() {
   }
 
   function handleReset() {
-    setForm({
-      fullName: '',
-      email: '',
-      phone: '',
-      claimType: 'va-disability',
-      urgency: 'standard',
-      caseSummary: '',
-      desiredOutcome: '',
-    })
-    setChecklist(buildInitialChecklist())
-    setFiles([])
+    resetFormState()
     setSubmitError('')
     setSubmitSuccess('')
   }
