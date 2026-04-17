@@ -101,7 +101,9 @@ serve(async (req) => {
   if (category) query = query.eq('category', category)
   if (status)   query = query.eq('status', status)
   if (keyword) {
-    const safe = keyword.replace(/[%_]/g, (c) => `\\${c}`)
+    // Escape PostgREST special chars: % and _ are LIKE wildcards; comma splits
+    // `.or()` conditions so it must also be escaped to avoid filter parse errors.
+    const safe = keyword.replace(/[%_,]/g, (c) => `\\${c}`)
     query = query.or(`title.ilike.%${safe}%,description.ilike.%${safe}%`)
   }
 

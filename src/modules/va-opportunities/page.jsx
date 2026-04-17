@@ -219,7 +219,7 @@ export default function VaOpportunitiesPage() {
           stage:      'prospecting',
           owner_id:   session.user.id,
           contact_id: null,
-          notes:      `VA Opportunity — ${opp.category} | Source: ${opp.source_url ?? 'N/A'} | Opportunity ID: ${opp.id}`,
+          notes:      JSON.stringify({ va_opportunity_id: opp.id, category: opp.category, source_url: opp.source_url ?? null }),
         })
       if (dealErr) throw dealErr
       setCrmToast({ type: 'success', msg: `Deal "${opp.title}" added to CRM pipeline.` })
