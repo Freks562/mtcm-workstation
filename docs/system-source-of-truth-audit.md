@@ -108,6 +108,20 @@ Items likely managed outside repo migrations/functions/config:
     - `http://localhost:5173/`
     - `https://xgsiljjbyoeuiyiclhtp.supabase.co/auth/v1/callback`
   - Wildcard/pattern rules: none confirmed (captured entries are exact URLs)
+- Approved production-parity auth URL target (pending dashboard apply):
+  - Canonical production domain: `mtcmglassworkstation.com`
+  - Site URL to set: `https://mtcmglassworkstation.com`
+  - Redirect URLs to keep:
+    - `https://mtcmglassworkstation.com/auth/callback`
+    - `https://mtcmglassworkstation.com/ops/login`
+    - `https://mtcmglassworkstation.com/workstation`
+    - `http://localhost:5173`
+    - `http://localhost:5173/auth/callback`
+  - Redirect URLs to remove later (only after verified cutover and clean traffic):
+    - `https://www.mtcmglassworkstation.com/auth/callback`
+    - `https://www.mtcmglassworkstation.com/ops/login`
+    - `https://www.mtcmglassworkstation.com/workstation`
+    - `https://www.mtcglassworkstation.com/auth/callback`
 - Storage buckets: `vetrights-files`, `freks-assets`
 - Policy/table truth is repo-aligned for workstation core; dashboard truth also shows `vetrights_cases` policies
 - Deployed functions are the smaller repo-aligned set:
@@ -167,6 +181,25 @@ Items likely managed outside repo migrations/functions/config:
 - Wildcard/pattern rules:
   - No wildcard redirect patterns confirmed in captured source/target facts (exact URL entries shown)
 - Safe production cutover is **blocked** until target Site URL and redirect URLs are updated to production parity, then re-verified with provider client/callback config.
+- Dashboard-safe remediation order in target (`mtcm-workstation`):
+  1. Set Site URL to `https://mtcmglassworkstation.com`
+  2. Add redirect keep-list:
+     - `https://mtcmglassworkstation.com/auth/callback`
+     - `https://mtcmglassworkstation.com/ops/login`
+     - `https://mtcmglassworkstation.com/workstation`
+     - `http://localhost:5173`
+     - `http://localhost:5173/auth/callback`
+  3. Save changes
+  4. Keep old `www` redirects for now if production may still use them
+  5. Remove `www` redirects only after cutover verification + clean traffic confirmation
+- Required manual validation immediately after auth URL update:
+  - normal login
+  - Google login
+  - logout and return
+  - direct hit to `/workstation`
+  - direct hit to `/ops/login`
+- Provider parity caution:
+  - Google/GitHub/Zoom provider app configs in target must allow the same production domain/callback pattern or auth can still fail.
 
 ### High-risk non-auth blockers
 
@@ -182,8 +215,11 @@ Items likely managed outside repo migrations/functions/config:
    - [x] Site URL captured and compared
    - [x] Redirect URLs / allowed redirect patterns captured and compared
    - [ ] Source Site URL captured explicitly (still missing from confirmed snapshot)
-   - [ ] Google/GitHub/Zoom callback config parity confirmed
-   - [ ] Target Site URL/redirects remediated from local/dev to production parity and revalidated
+   - [ ] Target Site URL updated to `https://mtcmglassworkstation.com`
+   - [ ] Target redirect keep-list added (3 prod + 2 localhost URLs)
+   - [ ] Temporary `www` redirects retained until cutover is verified and traffic is clean
+   - [ ] Google/GitHub/Zoom callback config parity confirmed against canonical/non-www domain
+   - [ ] Post-change auth validation passed (normal login, Google login, logout/return, `/workstation`, `/ops/login`)
 2. **Secrets category parity (names/presence only; no values)**
    - [ ] Supabase runtime parity confirmed
    - [ ] Resend/DotMail, Gmail, SAM.gov, Stripe, Twilio, Slack, Plausible, site/donation categories classified as migrate/verify/retire
