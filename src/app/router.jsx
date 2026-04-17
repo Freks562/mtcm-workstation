@@ -9,12 +9,14 @@ import DotmailPage from '../modules/dotmail/page.jsx'
 import AnalyticsPage from '../modules/analytics/page.jsx'
 import FreksFramePage from '../modules/freksframe/page.jsx'
 import VaOpportunitiesPage from '../modules/va-opportunities/page.jsx'
+import VetRightsPage from '../modules/vetrights/page.jsx'
 
 export function AppRouter() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+
         <Route element={<ProtectedRoute />}>
           <Route element={<AppShell />}>
             <Route index element={<Navigate to="/command-center" replace />} />
@@ -25,8 +27,10 @@ export function AppRouter() {
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/freksframe" element={<FreksFramePage />} />
             <Route path="/va-opportunities" element={<VaOpportunitiesPage />} />
+            <Route path="/vetrights" element={<VetRightsPage />} />
           </Route>
         </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
