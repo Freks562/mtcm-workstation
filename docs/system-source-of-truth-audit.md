@@ -16,6 +16,8 @@ Use these docs together for controlled consolidation:
    - `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/supabase-parity-checklist.md`
 3. Final production cutover checklist:
    - `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/cutover-checklist.md`
+4. Operator dashboard-order guide for filling worksheets:
+   - `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/operator-supabase-parity-guide.md`
 
 ## 3. System Inventory Table
 
