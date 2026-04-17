@@ -73,6 +73,19 @@ Items likely managed outside repo migrations/functions/config:
 ### Source (`mtcmglassworkstation`) confirmed
 
 - Auth providers: Email, Google, Zoom enabled; GitHub disabled
+- Auth URL configuration:
+  - Site URL: not yet captured in this audit pass
+  - Redirect URLs (production set includes):
+    - `https://www.mtcmglassworkstation.com/auth/callback`
+    - `https://www.mtcmglassworkstation.com/ops/login`
+    - `https://www.mtcmglassworkstation.com/workstation`
+    - `https://mtcmglassworkstation.com/auth/callback`
+    - `https://mtcmglassworkstation.com/ops/login`
+    - `https://mtcmglassworkstation.com/workstation`
+    - `https://www.mtcglassworkstation.com/auth/callback`
+    - `http://localhost:5173/auth/callback`
+    - `http://localhost:5173`
+  - Wildcard/pattern rules: none confirmed (captured entries are exact URLs)
 - Storage buckets: `lawn_uploads` (public), `user_ids`, `course_uploads`, `business_assets`
 - Broader policy/table truth exists for ops and Gmail reply draft workflows (example: `gmail_reply_drafts`)
 - Deployed functions include a wider production integration surface, including:
@@ -88,6 +101,13 @@ Items likely managed outside repo migrations/functions/config:
 ### Target (`mtcm-workstation`) confirmed
 
 - Auth providers: Email, Google, Zoom, GitHub enabled
+- Auth URL configuration:
+  - Site URL: `http://localhost:5173`
+  - Redirect URLs:
+    - `http://localhost:5173`
+    - `http://localhost:5173/`
+    - `https://xgsiljjbyoeuiyiclhtp.supabase.co/auth/v1/callback`
+  - Wildcard/pattern rules: none confirmed (captured entries are exact URLs)
 - Storage buckets: `vetrights-files`, `freks-assets`
 - Policy/table truth is repo-aligned for workstation core; dashboard truth also shows `vetrights_cases` policies
 - Deployed functions are the smaller repo-aligned set:
@@ -107,7 +127,7 @@ Items likely managed outside repo migrations/functions/config:
 |---|---|---|---|
 | Workstation core app/data | Partial, with legacy overlays | Primary repo-aligned ownership | Preserve target as core truth |
 | Public intake + external integrations | Primary live truth (broader function/policy surface) | Not fully present yet | Selectively import required production integrations |
-| Auth providers | Email/Google/Zoom active | Email/Google/Zoom + GitHub active | Provider list mostly aligned; URL/config parity now key |
+| Auth providers + URL config | Email/Google/Zoom active + production redirect set | Email/Google/Zoom + GitHub active + local/dev redirect set | Provider enablement mostly aligned, but URL config is not aligned and blocks safe cutover |
 | Storage | Public-service buckets present | Repo-aligned workstation buckets present | Preserve target buckets; import missing public-service buckets if required |
 | DotMail/Gmail operations | Broadly present in source | Partially present (`send-emails`) | Import missing Gmail/DotMail operational stack as needed |
 
@@ -140,10 +160,13 @@ Items likely managed outside repo migrations/functions/config:
 - Provider enablement list is **not** the primary blocker now:
   - Email/Google/Zoom parity exists
   - GitHub is an additional target-only provider (not a direct cutover blocker by itself)
-- Remaining auth blockers are URL/config parity checks not yet captured:
-  - Site URL parity
-  - Redirect URL/allowed redirect pattern parity
-  - Google/GitHub/Zoom client credential and callback configuration parity
+- Auth URL configuration is **not aligned**:
+  - Target Site URL remains local/dev: `http://localhost:5173`
+  - Target redirect set remains local-only plus Supabase callback
+  - Source redirect set already contains production web/app callback/login/workstation paths
+- Wildcard/pattern rules:
+  - No wildcard redirect patterns confirmed in captured source/target facts (exact URL entries shown)
+- Safe production cutover is **blocked** until target Site URL and redirect URLs are updated to production parity, then re-verified with provider client/callback config.
 
 ### High-risk non-auth blockers
 
@@ -156,9 +179,11 @@ Items likely managed outside repo migrations/functions/config:
 ## 11. Exact Cutover Prerequisites Checklist (migration-safe)
 
 1. **Auth URL Configuration parity (source + target)**
-   - [ ] Site URL captured and compared
-   - [ ] Redirect URLs / allowed redirect patterns captured and compared
+   - [x] Site URL captured and compared
+   - [x] Redirect URLs / allowed redirect patterns captured and compared
+   - [ ] Source Site URL captured explicitly (still missing from confirmed snapshot)
    - [ ] Google/GitHub/Zoom callback config parity confirmed
+   - [ ] Target Site URL/redirects remediated from local/dev to production parity and revalidated
 2. **Secrets category parity (names/presence only; no values)**
    - [ ] Supabase runtime parity confirmed
    - [ ] Resend/DotMail, Gmail, SAM.gov, Stripe, Twilio, Slack, Plausible, site/donation categories classified as migrate/verify/retire
@@ -179,19 +204,16 @@ Items likely managed outside repo migrations/functions/config:
 
 ## 12. Updated Migration Priority Order
 
-- **P0 (inventory truth capture):**
-  - Capture final auth URL/config parity evidence
-  - Capture secret-category presence/parity decisions
-  - Capture required source function/bucket/policy responsibilities
-- **P1 (runtime parity in target):**
-  - Add missing required auth/runtime/function parity in `mtcm-workstation`
-- **P2 (public-service object parity):**
-  - Migrate only required public-service buckets/policies/backend objects
-- **P3 (target validation):**
-  - Execute end-to-end target validation for auth, DotMail/Gmail, capability, intake, and integration flows
-- **P4 (cutover/decommission):**
-  - Switch runtime/frontend to target after all prerequisites pass
-  - Retire source only after stabilization success
+1. **URL config diff**  
+   - Completed enough to conclude misalignment: target is still local/dev; source includes production redirect set.
+2. **Old vs new function responsibility diff (DotMail/Gmail/public intake/capability)**  
+   - Determine exact source-only functions that must be retained or ported to target.
+3. **Bucket policy diff**  
+   - Compare required bucket-level policy behavior for any retained production flows.
+4. **Secret presence classification**  
+   - Classify presence/parity for runtime categories (names only; no secret values).
+5. **Actual migration planning**  
+   - Plan/execute only after blocker-class parity drifts are closed.
 
 Control rules for this phase:
 
