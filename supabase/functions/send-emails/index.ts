@@ -102,6 +102,7 @@ serve(async (_req) => {
 
   let sentCount = 0
   let failedCount = 0
+  let stateConflictCount = 0
 
   for (let i = 0; i < batch.length; i++) {
     const row = batch[i]
@@ -110,7 +111,7 @@ serve(async (_req) => {
     if (result.status === 'fulfilled' && result.value.ok) {
       // ── Success path ───────────────────────────────────────────────────
       const resendData = result.value.data
-      await supabase
+      const { data: sentRow, error: sentUpdateErr } = await supabase
         .from('emails')
         .update({
           status: 'sent',
@@ -119,6 +120,16 @@ serve(async (_req) => {
         })
         .eq('status', 'sending')
         .eq('id', row.id)
+        .select('id')
+        .maybeSingle()
+      if (sentUpdateErr) {
+        throw new Error(`Failed to mark email ${row.id} as sent: ${sentUpdateErr.message}`)
+      }
+
+      if (!sentRow) {
+        stateConflictCount++
+        continue
+      }
 
       await logEvent(supabase, {
         type: 'email_sent',
@@ -134,7 +145,7 @@ serve(async (_req) => {
           ? String(result.reason)
           : result.value?.errorMessage ?? 'Unknown Resend error'
 
-      await supabase
+      const { data: failedRow, error: failedUpdateErr } = await supabase
         .from('emails')
         .update({
           status: 'failed',
@@ -142,6 +153,16 @@ serve(async (_req) => {
         })
         .eq('status', 'sending')
         .eq('id', row.id)
+        .select('id')
+        .maybeSingle()
+      if (failedUpdateErr) {
+        throw new Error(`Failed to mark email ${row.id} as failed: ${failedUpdateErr.message}`)
+      }
+
+      if (!failedRow) {
+        stateConflictCount++
+        continue
+      }
 
       await logEvent(supabase, {
         type: 'email_failed',
@@ -154,7 +175,12 @@ serve(async (_req) => {
   }
 
   return new Response(
-    JSON.stringify({ processed: batch.length, sent: sentCount, failed: failedCount }),
+    JSON.stringify({
+      processed: batch.length,
+      sent: sentCount,
+      failed: failedCount,
+      state_conflicts: stateConflictCount,
+    }),
     { status: 200, headers: { 'Content-Type': 'application/json' } }
   )
 })
@@ -217,11 +243,15 @@ async function logEvent(
   { type, entityId, metadata }: { type: string; entityId: string; metadata: Record<string, unknown> }
 ) {
   // Events written with service role — actor_id is null (system action)
-  await supabase.from('events').insert({
+  const { error } = await supabase.from('events').insert({
     type,
     actor_id: null,
     entity_type: 'email',
     entity_id: entityId,
     metadata,
   })
+
+  if (error) {
+    console.error('[send-emails] logEvent failed', { type, entityId, error: error.message })
+  }
 }

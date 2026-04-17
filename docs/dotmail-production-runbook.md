@@ -70,6 +70,8 @@ select cron.schedule(
 );
 ```
 
+Replace `<project-ref>` and `<service-role-or-internal-token>` with real values before use.
+
 If scheduler is not configured, operators must run manual invocation.
 
 ## Operational Verification
