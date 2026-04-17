@@ -95,15 +95,15 @@ function ChecklistItem({ item, checked, onToggle }) {
       className={cn(
         'flex items-start gap-3 rounded-lg border p-4 transition-colors cursor-pointer',
         checked
-          ? 'border-green-200 bg-green-50'
-          : 'border-gray-200 bg-white hover:border-indigo-200 hover:bg-indigo-50/30'
+          ? 'border-green-700 bg-green-900/30'
+          : 'border-gray-700 bg-gray-800 hover:border-indigo-500 hover:bg-gray-700'
       )}
       onClick={() => onToggle(item.id)}
     >
       <span
         className={cn(
           'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors',
-          checked ? 'border-green-500 bg-green-500' : 'border-gray-300 bg-white'
+          checked ? 'border-green-500 bg-green-500' : 'border-gray-500 bg-gray-700'
         )}
       >
         {checked && (
@@ -113,17 +113,17 @@ function ChecklistItem({ item, checked, onToggle }) {
         )}
       </span>
       <div className="flex-1 min-w-0">
-        <p className={cn('text-sm font-medium', checked ? 'text-green-800 line-through decoration-green-400' : 'text-gray-900')}>
+        <p className={cn('text-sm font-medium', checked ? 'text-green-400 line-through decoration-green-600' : 'text-gray-100')}>
           {item.label}
         </p>
-        <p className="mt-0.5 text-xs text-gray-500">{item.description}</p>
+        <p className="mt-0.5 text-xs text-gray-400">{item.description}</p>
         {item.link && (
           <a
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="mt-1 inline-block text-xs font-medium text-indigo-600 hover:underline"
+            className="mt-1 inline-block text-xs font-medium text-indigo-400 hover:underline"
           >
             {item.linkLabel} ↗
           </a>
@@ -139,18 +139,18 @@ function ReadinessBar({ done, total }) {
   const pct = total === 0 ? 0 : Math.round((done / total) * 100)
   const color = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-red-500'
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-5">
+    <div className="rounded-lg border border-gray-700 bg-gray-800 p-5">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-sm font-medium text-gray-700">Overall Readiness</p>
-        <p className="text-lg font-bold text-gray-900">{pct}%</p>
+        <p className="text-sm font-medium text-gray-300">Overall Readiness</p>
+        <p className="text-lg font-bold text-white">{pct}%</p>
       </div>
-      <div className="h-3 w-full rounded-full bg-gray-100 overflow-hidden">
+      <div className="h-3 w-full rounded-full bg-gray-700 overflow-hidden">
         <div
           className={cn('h-full rounded-full transition-all duration-500', color)}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="mt-2 text-xs text-gray-400">{done} of {total} items complete</p>
+      <p className="mt-2 text-xs text-gray-500">{done} of {total} items complete</p>
     </div>
   )
 }
@@ -207,23 +207,23 @@ export default function VetCertReadinessPage() {
 
       {/* Stats */}
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-lg border border-gray-200 bg-white p-5">
-          <p className="text-sm font-medium text-gray-500">Certifications</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">
+        <div className="rounded-lg border border-gray-700 bg-gray-800 p-5">
+          <p className="text-sm font-medium text-gray-400">Certifications</p>
+          <p className="mt-2 text-2xl font-bold text-white">
             {CERT_ITEMS.filter((i) => checked.has(i.id)).length}
-            <span className="text-base font-normal text-gray-400"> / {CERT_ITEMS.length}</span>
+            <span className="text-base font-normal text-gray-500"> / {CERT_ITEMS.length}</span>
           </p>
         </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-5">
-          <p className="text-sm font-medium text-gray-500">Registrations & Docs</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">
+        <div className="rounded-lg border border-gray-700 bg-gray-800 p-5">
+          <p className="text-sm font-medium text-gray-400">Registrations & Docs</p>
+          <p className="mt-2 text-2xl font-bold text-white">
             {REG_ITEMS.filter((i) => checked.has(i.id)).length}
-            <span className="text-base font-normal text-gray-400"> / {REG_ITEMS.length}</span>
+            <span className="text-base font-normal text-gray-500"> / {REG_ITEMS.length}</span>
           </p>
         </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-5">
-          <p className="text-sm font-medium text-gray-500">Items Remaining</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">
+        <div className="rounded-lg border border-gray-700 bg-gray-800 p-5">
+          <p className="text-sm font-medium text-gray-400">Items Remaining</p>
+          <p className="mt-2 text-2xl font-bold text-white">
             {allItems.length - checked.size}
           </p>
         </div>
@@ -266,25 +266,25 @@ export default function VetCertReadinessPage() {
       <div className="mb-4 flex flex-wrap gap-2">
         <button
           onClick={() => quickPrompt('Walk me through the SDVOSB certification process step by step, including required documents and timelines.')}
-          className="rounded border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition-colors"
+          className="rounded border border-indigo-700 bg-indigo-900/40 px-3 py-1.5 text-xs font-medium text-indigo-300 hover:bg-indigo-800/60 transition-colors"
         >
           SDVOSB Step-by-Step
         </button>
         <button
           onClick={() => quickPrompt('What are the eligibility requirements for the VA SDVOSB and VOSB set-aside programs? How do I qualify?')}
-          className="rounded border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition-colors"
+          className="rounded border border-indigo-700 bg-indigo-900/40 px-3 py-1.5 text-xs font-medium text-indigo-300 hover:bg-indigo-800/60 transition-colors"
         >
           Check My Eligibility
         </button>
         <button
           onClick={() => quickPrompt('Write a one-page capability statement template for a veteran-owned small business targeting VA contracts. Include sections for core competencies, past performance, differentiators, and contact information.')}
-          className="rounded border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition-colors"
+          className="rounded border border-indigo-700 bg-indigo-900/40 px-3 py-1.5 text-xs font-medium text-indigo-300 hover:bg-indigo-800/60 transition-colors"
         >
           Generate Capability Statement
         </button>
         <button
           onClick={() => quickPrompt('What NAICS codes are most relevant for a veteran-owned business pursuing VA healthcare IT, consulting, and facilities contracts?')}
-          className="rounded border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition-colors"
+          className="rounded border border-indigo-700 bg-indigo-900/40 px-3 py-1.5 text-xs font-medium text-indigo-300 hover:bg-indigo-800/60 transition-colors"
         >
           Find NAICS Codes
         </button>
