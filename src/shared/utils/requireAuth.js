@@ -1,13 +1,12 @@
-export async function requireUser(supabase) {
-  const { data, error } = await supabase.auth.getUser()
+export async function requireUser() {
+  const { supabase } = await import('../../lib/supabaseClient.js')
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
 
-  if (error) {
-    throw new Error(error.message || 'Failed to verify authentication.')
-  }
+  if (error) throw error
+  if (!user) throw new Error('You must be signed in to save a VetRights intake.')
 
-  if (!data?.user) {
-    throw new Error('User not authenticated.')
-  }
-
-  return data.user
+  return user
 }
