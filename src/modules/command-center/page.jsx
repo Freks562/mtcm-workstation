@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase.js'
 import { useAuth } from '../../auth/AuthProvider.jsx'
+import { JamalAIPanel } from '../../shared/components/ui/JamalAIPanel.jsx'
 
 function StatCard({ label, value, loading }) {
   return (
@@ -163,6 +164,13 @@ export default function CommandCenterPage() {
           ))}
         </div>
       )}
+
+      {/* JamalAIBrain */}
+      <h2 className="mb-3 mt-6 text-xs font-semibold uppercase tracking-wide text-gray-400">JamalAIBrain</h2>
+      <JamalAIPanel
+        module={undefined}
+        placeholder='Ask anything… e.g. "Summarize open deals", "Draft a follow-up email", "Show inactive campaigns"'
+      />
     </div>
   )
 }

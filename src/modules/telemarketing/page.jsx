@@ -6,6 +6,7 @@ import { useLeaderboard } from './hooks/useLeaderboard.js'
 import { CampaignForm } from './components/CampaignForm.jsx'
 import { CallLogForm } from './components/CallLogForm.jsx'
 import { Modal } from '../../shared/components/ui/Modal.jsx'
+import { JamalAIPanel } from '../../shared/components/ui/JamalAIPanel.jsx'
 import { useAuth } from '../../auth/AuthProvider.jsx'
 import { cn } from '../../shared/utils/cn.js'
 import { supabase } from '../../lib/supabase.js'
@@ -400,6 +401,10 @@ export default function TelemarketingPage() {
           />
         </Modal>
       )}
+
+      {/* JamalAI Telemarketing Assistant */}
+      <h2 className="mb-3 mt-8 text-xs font-semibold uppercase tracking-wide text-gray-400">JamalAI Assistant</h2>
+      <JamalAIPanel module="telemarketing" />
     </div>
   )
 }

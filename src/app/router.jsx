@@ -7,10 +7,11 @@ import CrmPage from '../modules/crm/page.jsx'
 import TelemarketingPage from '../modules/telemarketing/page.jsx'
 import DotmailPage from '../modules/dotmail/page.jsx'
 import AnalyticsPage from '../modules/analytics/page.jsx'
+import FreksFramePage from '../modules/freksframe/page.jsx'
 
 export function AppRouter() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<ProtectedRoute />}>
@@ -21,6 +22,7 @@ export function AppRouter() {
             <Route path="/telemarketing" element={<TelemarketingPage />} />
             <Route path="/dotmail" element={<DotmailPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/freksframe" element={<FreksFramePage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
