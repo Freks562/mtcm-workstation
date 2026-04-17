@@ -46,7 +46,18 @@
 - Indexed in `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/opportunities/README.md`.
 - Treated as **Glass Workstation tracked pursuit truth** (docs-only), pending backend/runtime consolidation completion.
 
-## 7) Guardrails for this artifact
+## 7) Response-prep package (docs-only)
+
+Response-prep materials are tracked under:
+
+- `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/opportunities/st-petersburg-ai-rfi/response-outline.md`
+- `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/opportunities/st-petersburg-ai-rfi/compliance-governance-checklist.md`
+- `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/opportunities/st-petersburg-ai-rfi/required-attachments-checklist.md`
+- `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/opportunities/st-petersburg-ai-rfi/question-log.md`
+- `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/opportunities/st-petersburg-ai-rfi/assumptions-risk-log.md`
+- `/home/runner/work/mtcm-workstation/mtcm-workstation/docs/opportunities/st-petersburg-ai-rfi/internal-review-checklist.md`
+
+## 8) Guardrails for this artifact
 
 - No runtime, route, UI, or Supabase changes were made.
 - No schema or capability claims were invented.
