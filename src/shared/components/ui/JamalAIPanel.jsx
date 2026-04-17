@@ -27,8 +27,8 @@ const MODULE_PLACEHOLDERS = {
   grants: 'e.g. "Who on my team should apply for this grant?", "Summarize eligibility requirements"',
 }
 
-export function JamalAIPanel({ module, placeholder }) {
-  const [task, setTask] = useState('')
+export function JamalAIPanel({ module, placeholder, initialTask }) {
+  const [task, setTask] = useState(initialTask ?? '')
   const [reply, setReply] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)

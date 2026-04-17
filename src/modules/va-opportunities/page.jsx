@@ -63,7 +63,7 @@ function deadlineLabel(deadline) {
 
 // ── OpportunityCard ───────────────────────────────────────────────────────────
 
-function OpportunityCard({ opp, onAskJamal, onAddToCrm, onGenerateStory, saving }) {
+function OpportunityCard({ opp, onAskJamal, onAddToCrm, onAddToGrants, onGenerateStory, saving, grantSaving }) {
   const dl = deadlineLabel(opp.deadline)
 
   return (
@@ -138,6 +138,13 @@ function OpportunityCard({ opp, onAskJamal, onAddToCrm, onGenerateStory, saving 
         >
           {saving === opp.id ? 'Adding…' : 'Add to CRM'}
         </button>
+        <button
+          onClick={() => onAddToGrants(opp)}
+          disabled={grantSaving === opp.id}
+          className="rounded border border-green-300 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-50 transition-colors disabled:opacity-50"
+        >
+          {grantSaving === opp.id ? 'Adding…' : 'Add to Grant Pipeline'}
+        </button>
         {opp.source_url && (
           <a
             href={opp.source_url}
@@ -187,8 +194,9 @@ export default function VaOpportunitiesPage() {
   const [aiData, setAiData]     = useState(null)    // data context sent with the prompt
 
   // CRM deal creation state
-  const [saving, setSaving]     = useState(null)    // opportunity id being saved
-  const [crmToast, setCrmToast] = useState(null)    // success/error message
+  const [saving, setSaving]         = useState(null)    // opportunity id being saved
+  const [grantSaving, setGrantSaving] = useState(null)  // opportunity id being added to grants
+  const [crmToast, setCrmToast]     = useState(null)    // success/error message
 
   // ── handlers ──────────────────────────────────────────────────────────────
 
