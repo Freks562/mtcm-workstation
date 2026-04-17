@@ -41,11 +41,14 @@ serve(async (_req) => {
     )
   }
 
-  // ── 1. Claim a batch of queued emails atomically ───────────────────────
-  // Only process outbound emails (direction = 'outbound').
-  // Mark them as 'sending' immediately to prevent double-processing if the
-  // function is invoked concurrently.
-  const { data: batch, error: fetchErr } = await supabase
+  // ── 1. Reserve a batch of queued emails safely for this worker ─────────
+  // Claim strategy:
+  //   a) Read candidate rows in FIFO order.
+  //   b) Conditionally update status queued -> sending.
+  //   c) Send only rows returned from the conditional update.
+  // This prevents duplicate sends across concurrent workers because only one
+  // worker can transition a given row out of queued.
+  const { data: candidates, error: fetchErr } = await supabase
     .from('emails')
     .select('id, subject, body, contact_id, contacts(email, first_name, last_name)')
     .eq('status', 'queued')
@@ -60,19 +63,37 @@ serve(async (_req) => {
     )
   }
 
-  if (!batch || batch.length === 0) {
+  if (!candidates || candidates.length === 0) {
     return new Response(
       JSON.stringify({ processed: 0, message: 'No queued emails found.' }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     )
   }
 
-  // Claim the batch: set status = 'sending'
-  const ids = batch.map((r: any) => r.id)
-  await supabase
+  const candidateIds = candidates.map((r: any) => r.id)
+  const { data: claimedRows, error: claimErr } = await supabase
     .from('emails')
     .update({ status: 'sending' })
-    .in('id', ids)
+    .in('id', candidateIds)
+    .eq('status', 'queued')
+    .select('id')
+
+  if (claimErr) {
+    return new Response(
+      JSON.stringify({ error: claimErr.message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    )
+  }
+
+  const claimedIds = new Set((claimedRows ?? []).map((r: any) => r.id))
+  const batch = candidates.filter((row: any) => claimedIds.has(row.id))
+
+  if (batch.length === 0) {
+    return new Response(
+      JSON.stringify({ processed: 0, message: 'No queued emails available for this worker.' }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    )
+  }
 
   // ── 2. Send each email via Resend ──────────────────────────────────────
   const results = await Promise.allSettled(
@@ -96,6 +117,7 @@ serve(async (_req) => {
           provider_id: resendData?.id ?? null,
           sent_at: new Date().toISOString(),
         })
+        .eq('status', 'sending')
         .eq('id', row.id)
 
       await logEvent(supabase, {
@@ -118,6 +140,7 @@ serve(async (_req) => {
           status: 'failed',
           failure_reason: reason,
         })
+        .eq('status', 'sending')
         .eq('id', row.id)
 
       await logEvent(supabase, {

@@ -83,5 +83,11 @@ enabled = true
 policy = "oneshot"
 inspector_port = 8083
 
+# DotMail send queue scheduler note:
+# Supabase scheduler/pg_cron wiring is not fully repo-managed via this config file.
+# Keep send-emails invocable over HTTP and manage production cadence in dashboard SQL.
+# Exact manual and scheduler run paths are documented in:
+#   docs/dotmail-production-runbook.md
+
 [analytics]
 enabled = false
