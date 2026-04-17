@@ -239,6 +239,33 @@ export default function VaOpportunitiesPage() {
     }
   }
 
+  async function handleAddToGrants(opp) {
+    if (!session?.user?.id) return
+    setGrantSaving(opp.id)
+    setCrmToast(null)
+    try {
+      const { error: grantErr } = await supabase
+        .from('grants')
+        .insert({
+          title:          `VA: ${opp.title}`,
+          agency:         opp.agency,
+          amount:         opp.amount_usd ?? 0,
+          stage:          'identified',
+          opportunity_id: opp.id,
+          user_id:        session.user.id,
+          deadline:       opp.deadline ?? null,
+          notes:          opp.description ?? null,
+        })
+      if (grantErr) throw grantErr
+      setCrmToast({ type: 'success', msg: `"${opp.title}" added to Grant Pipeline at Identified stage.` })
+    } catch (err) {
+      setCrmToast({ type: 'error', msg: err?.message ?? 'Failed to add to grant pipeline.' })
+    } finally {
+      setGrantSaving(null)
+      setTimeout(() => setCrmToast(null), 5000)
+    }
+  }
+
   async function handleGenerateStory(opp) {
     if (!session?.user?.id) return
     try {
@@ -362,8 +389,10 @@ export default function VaOpportunitiesPage() {
               opp={opp}
               onAskJamal={handleAskJamal}
               onAddToCrm={handleAddToCrm}
+              onAddToGrants={handleAddToGrants}
               onGenerateStory={handleGenerateStory}
               saving={saving}
+              grantSaving={grantSaving}
             />
           ))}
         </div>

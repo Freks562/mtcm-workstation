@@ -466,7 +466,7 @@ export default function GrantsPage() {
           key={aiKey}
           module="grants"
           initialTask={aiTask}
-          placeholder="e.g. &quot;Draft an executive summary for the VA suicide prevention grant&quot;"
+          placeholder='e.g. "Draft an executive summary for the VA suicide prevention grant"'
         />
       </div>
     </div>

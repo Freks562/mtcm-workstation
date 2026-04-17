@@ -9,6 +9,9 @@ import DotmailPage from '../modules/dotmail/page.jsx'
 import AnalyticsPage from '../modules/analytics/page.jsx'
 import FreksFramePage from '../modules/freksframe/page.jsx'
 import VaOpportunitiesPage from '../modules/va-opportunities/page.jsx'
+import GrantsPage from '../modules/grants/page.jsx'
+import VetCertReadinessPage from '../modules/ops/vetcert-readiness/page.jsx'
+import MeetingDemoPage from '../modules/ops/meeting-demo/page.jsx'
 
 export function AppRouter() {
   return (
@@ -25,6 +28,14 @@ export function AppRouter() {
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/freksframe" element={<FreksFramePage />} />
             <Route path="/va-opportunities" element={<VaOpportunitiesPage />} />
+            <Route path="/grants" element={<GrantsPage />} />
+
+            {/* /ops/* — Operations Pipeline */}
+            <Route path="/ops/deals" element={<CrmPage />} />
+            <Route path="/ops/metrics" element={<AnalyticsPage />} />
+            <Route path="/ops/grants" element={<GrantsPage />} />
+            <Route path="/ops/meeting-demo" element={<MeetingDemoPage />} />
+            <Route path="/ops/vetcert-readiness" element={<VetCertReadinessPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -32,3 +43,4 @@ export function AppRouter() {
     </BrowserRouter>
   )
 }
+
