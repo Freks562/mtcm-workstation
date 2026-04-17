@@ -28,7 +28,7 @@ function buildDays(n) {
 
 function StatCard({ label, value, sub, loading }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-5">
+    <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
       <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</p>
       <p className="mt-2 text-3xl font-bold text-gray-900">
         {loading ? '…' : value ?? '—'}
@@ -254,9 +254,9 @@ export default function AnalyticsPage() {
   const rangeSuffix = range === 'today' ? 'today' : range === '7d' ? 'last 7d' : range === '30d' ? 'last 30d' : 'all time'
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900">Analytics</h1>
         <div className="flex gap-1 rounded-lg border border-gray-200 bg-white p-1">
           {RANGE_OPTIONS.map((opt) => (
@@ -273,8 +273,9 @@ export default function AnalyticsPage() {
             </button>
           ))}
         </div>
-      </div>
+      </header>
 
+      <main className="grid gap-6">
       {/* CRM KPIs */}
       <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">CRM</h2>
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -293,7 +294,7 @@ export default function AnalyticsPage() {
 
       {/* Calls chart */}
       {range !== 'all' && (
-        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
+        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Calls per day</p>
           {loading ? (
             <p className="text-xs text-gray-400 py-6 text-center">Loading…</p>
@@ -312,7 +313,7 @@ export default function AnalyticsPage() {
 
       {/* Emails chart */}
       {range !== 'all' && (
-        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
+        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Emails sent per day</p>
           {loading ? (
             <p className="text-xs text-gray-400 py-6 text-center">Loading…</p>
@@ -329,7 +330,7 @@ export default function AnalyticsPage() {
       ) : recentEvents.length === 0 ? (
         <p className="text-sm text-gray-500">No recent activity.</p>
       ) : (
-        <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
+        <div className="rounded-lg border border-gray-200 bg-white shadow-sm divide-y divide-gray-100">
           {recentEvents.map((ev, i) => (
             <div key={i} className="flex items-center justify-between px-4 py-3">
               <span className="text-sm text-gray-700">
@@ -352,7 +353,7 @@ export default function AnalyticsPage() {
       {/* JamalAI Analytics Assistant */}
       <h2 className="mb-3 mt-8 text-xs font-semibold uppercase tracking-wide text-gray-400">JamalAI Assistant</h2>
       <JamalAIPanel module="analytics" />
+      </main>
     </div>
   )
 }
-

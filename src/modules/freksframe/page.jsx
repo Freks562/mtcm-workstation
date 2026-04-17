@@ -66,7 +66,7 @@ function SectionHeading({ children, action }) {
 
 function Card({ children, className }) {
   return (
-    <div className={cn('rounded-lg border border-gray-200 bg-white p-5', className)}>
+    <div className={cn('rounded-lg border border-gray-200 bg-white p-5 shadow-sm', className)}>
       {children}
     </div>
   )
@@ -331,15 +331,16 @@ export default function FreksFramePage() {
   // ── render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Page header */}
-      <div className="mb-6">
+      <header>
         <h1 className="text-xl font-semibold text-gray-900">FreksFrame</h1>
         <p className="mt-1 text-sm text-gray-500">
           AI-powered lyric video storyboard studio — create projects, generate scenes, export renders.
         </p>
-      </div>
+      </header>
 
+      <main className="grid gap-6">
       {/* ── Projects panel ── */}
       <SectionHeading
         action={
@@ -697,6 +698,7 @@ export default function FreksFramePage() {
           </div>
         </>
       )}
+      </main>
     </div>
   )
 }

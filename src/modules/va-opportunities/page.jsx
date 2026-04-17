@@ -261,17 +261,18 @@ export default function VaOpportunitiesPage() {
   // ── render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6 flex items-start justify-between">
+      <header className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">VA Opportunity Feed</h1>
           <p className="mt-1 text-sm text-gray-500">
             Grants, contracts, and programs from the Department of Veterans Affairs
           </p>
         </div>
-      </div>
+      </header>
 
+      <main className="grid gap-6">
       {/* Toast */}
       {crmToast && (
         <div
@@ -342,7 +343,7 @@ export default function VaOpportunitiesPage() {
       {loading ? (
         <p className="text-sm text-gray-500">Loading opportunities…</p>
       ) : opportunities.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 py-16 text-center">
+        <div className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center shadow-sm">
           <p className="text-sm text-gray-500">No opportunities found.</p>
           <p className="mt-1 text-xs text-gray-400">Try changing your filters or check back for new announcements.</p>
         </div>
@@ -376,6 +377,7 @@ export default function VaOpportunitiesPage() {
           }
         />
       </div>
+      </main>
     </div>
   )
 }

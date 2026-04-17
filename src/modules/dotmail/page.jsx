@@ -110,9 +110,9 @@ export default function DotmailPage() {
   const TABS = ['templates', 'campaigns', 'log']
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900">DotMail</h1>
         {tab === 'templates' && (
           <button
@@ -130,8 +130,9 @@ export default function DotmailPage() {
             + New Campaign
           </button>
         )}
-      </div>
+      </header>
 
+      <main className="grid gap-6">
       {/* Tabs */}
       <div className="mb-4 flex gap-4 border-b border-gray-200">
         {TABS.map((t) => (
@@ -158,7 +159,7 @@ export default function DotmailPage() {
           ) : templates.length === 0 ? (
             <p className="text-sm text-gray-500">No templates yet.</p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
               <table className="min-w-full text-sm">
                 <thead className="bg-gray-50 text-xs font-medium uppercase text-gray-500">
                   <tr>
@@ -207,7 +208,7 @@ export default function DotmailPage() {
           ) : campaigns.length === 0 ? (
             <p className="text-sm text-gray-500">No email campaigns yet.</p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
               <table className="min-w-full text-sm">
                 <thead className="bg-gray-50 text-xs font-medium uppercase text-gray-500">
                   <tr>
@@ -288,7 +289,7 @@ export default function DotmailPage() {
           ) : emails.length === 0 ? (
             <p className="text-sm text-gray-500">No emails found.</p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
               <table className="min-w-full text-sm">
                 <thead className="bg-gray-50 text-xs font-medium uppercase text-gray-500">
                   <tr>
@@ -391,6 +392,7 @@ export default function DotmailPage() {
       {/* JamalAI Dotmail Assistant */}
       <h2 className="mb-3 mt-8 text-xs font-semibold uppercase tracking-wide text-gray-400">JamalAI Assistant</h2>
       <JamalAIPanel module="dotmail" />
+      </main>
     </div>
   )
 }

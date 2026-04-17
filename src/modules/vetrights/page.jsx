@@ -116,14 +116,14 @@ export default function VetRightsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <header>
         <h1 className="text-2xl font-semibold text-gray-900">VetRights</h1>
         <p className="mt-1 text-sm text-gray-500">
           Veteran intake, evidence upload, and case readiness.
         </p>
-      </div>
+      </header>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <main className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-base font-semibold text-gray-900">New Intake</h2>
 
@@ -331,7 +331,7 @@ export default function VetRightsPage() {
             </p>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

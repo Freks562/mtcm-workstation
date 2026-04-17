@@ -112,9 +112,9 @@ export default function TelemarketingPage() {
   const TABS = ['queue', 'campaigns', 'leaderboard']
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900">Telemarketing</h1>
         {tab === 'campaigns' && (
           <button
@@ -124,8 +124,9 @@ export default function TelemarketingPage() {
             + New Campaign
           </button>
         )}
-      </div>
+      </header>
 
+      <main className="grid gap-6">
       {/* Tabs */}
       <div className="mb-4 flex gap-4 border-b border-gray-200">
         {TABS.map((t) => (
@@ -193,7 +194,7 @@ export default function TelemarketingPage() {
           )}
 
           {selectedCampaignId && !queueLoading && queue.length > 0 && (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
               <table className="min-w-full text-sm">
                 <thead className="bg-gray-50 text-xs font-medium uppercase text-gray-500">
                   <tr>
@@ -242,7 +243,7 @@ export default function TelemarketingPage() {
           {selectedCampaignId && !logsLoading && callLogs.length > 0 && (
             <div className="mt-8">
               <h3 className="mb-3 text-sm font-semibold text-gray-700">Recent Call Logs</h3>
-              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
                 <table className="min-w-full text-sm">
                   <thead className="bg-gray-50 text-xs font-medium uppercase text-gray-500">
                     <tr>
@@ -294,7 +295,7 @@ export default function TelemarketingPage() {
           ) : campaigns.length === 0 ? (
             <p className="text-sm text-gray-500">No campaigns yet.</p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
               <table className="min-w-full text-sm">
                 <thead className="bg-gray-50 text-xs font-medium uppercase text-gray-500">
                   <tr>
@@ -349,7 +350,7 @@ export default function TelemarketingPage() {
           ) : leaderboard.length === 0 ? (
             <p className="text-sm text-gray-500">No calls logged today yet.</p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
               <table className="min-w-full text-sm">
                 <thead className="bg-gray-50 text-xs font-medium uppercase text-gray-500">
                   <tr>
@@ -405,6 +406,7 @@ export default function TelemarketingPage() {
       {/* JamalAI Telemarketing Assistant */}
       <h2 className="mb-3 mt-8 text-xs font-semibold uppercase tracking-wide text-gray-400">JamalAI Assistant</h2>
       <JamalAIPanel module="telemarketing" />
+      </main>
     </div>
   )
 }

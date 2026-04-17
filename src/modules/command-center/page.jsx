@@ -5,7 +5,7 @@ import { JamalAIPanel } from '../../shared/components/ui/JamalAIPanel.jsx'
 
 function StatCard({ label, value, loading }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6">
+    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <p className="text-sm font-medium text-gray-500">{label}</p>
       <p className="mt-2 text-3xl font-bold text-gray-900">
         {loading ? '…' : value}
@@ -97,8 +97,8 @@ export default function CommandCenterPage() {
   }, [])
 
   return (
-    <div>
-      <div className="mb-6">
+    <div className="space-y-6">
+      <header>
         <h1 className="text-xl font-semibold text-gray-900">Command Center</h1>
         {session?.user && (
           <p className="mt-1 text-sm text-gray-500">
@@ -113,8 +113,9 @@ export default function CommandCenterPage() {
             )}
           </p>
         )}
-      </div>
+      </header>
 
+      <main className="grid gap-6">
       {/* CRM stats */}
       <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">CRM</h2>
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -148,7 +149,7 @@ export default function CommandCenterPage() {
       ) : recentEvents.length === 0 ? (
         <p className="text-sm text-gray-500">No recent activity.</p>
       ) : (
-        <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
+        <div className="rounded-lg border border-gray-200 bg-white shadow-sm divide-y divide-gray-100">
           {recentEvents.map((ev, i) => (
             <div key={i} className="flex items-center justify-between px-4 py-3">
               <span className="text-sm text-gray-700">
@@ -171,6 +172,7 @@ export default function CommandCenterPage() {
         module={undefined}
         placeholder='Ask anything… e.g. "Summarize open deals", "Draft a follow-up email", "Show inactive campaigns"'
       />
+      </main>
     </div>
   )
 }
