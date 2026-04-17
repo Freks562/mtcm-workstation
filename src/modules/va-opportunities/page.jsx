@@ -159,6 +159,15 @@ function OpportunityCard({ opp, onAskJamal, onAddToCrm, onGenerateStory, saving 
   )
 }
 
+// Lyrics template used when generating a FreksFrame story from a VA opportunity.
+const storyLyricsTemplate = (opp) =>
+  `In the shadows of a broken system\n` +
+  `${opp.agency} opens the door\n` +
+  `${opp.title} — a chance to rise\n` +
+  `For those who served, they'll serve no more in silence\n` +
+  `Take the grant, take the step, take the call\n` +
+  `Together we stand, we answer for all`
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function VaOpportunitiesPage() {
@@ -225,13 +234,7 @@ export default function VaOpportunitiesPage() {
   async function handleGenerateStory(opp) {
     if (!session?.user?.id) return
     try {
-      const lyrics =
-        `In the shadows of a broken system\n` +
-        `${opp.agency} opens the door\n` +
-        `${opp.title} — a chance to rise\n` +
-        `For those who served, they'll serve no more in silence\n` +
-        `Take the grant, take the step, take the call\n` +
-        `Together we stand, we answer for all`
+      const lyrics = storyLyricsTemplate(opp)
       const { data: project, error: projErr } = await supabase
         .from('freks_projects')
         .insert({
@@ -251,10 +254,9 @@ export default function VaOpportunitiesPage() {
     }
   }
 
-  // JamalAIPanel: when an opportunity is selected, pass its data context.
-  // We control the initial task by passing it as a `prefill` prop — since the
-  // existing JamalAIPanel doesn't support controlled input, we use key= to reset.
-  const aiPanelKey = aiOpp ? aiOpp.id : 'default'
+  // aiPanelResetKey forces the JamalAIPanel to remount when a new opportunity is selected,
+  // clearing any previous reply so the user starts fresh for each card.
+  const aiPanelResetKey = aiOpp ? aiOpp.id : 'default'
 
   // ── render ─────────────────────────────────────────────────────────────────
 
@@ -365,7 +367,7 @@ export default function VaOpportunitiesPage() {
           JamalAI — VA Grants Assistant
         </h2>
         <JamalAIPanel
-          key={aiPanelKey}
+          key={aiPanelResetKey}
           module="grants"
           placeholder={
             aiOpp
