@@ -102,15 +102,17 @@ Items likely managed outside repo migrations/functions/config:
 
 - Auth providers: Email, Google, Zoom, GitHub enabled
 - Auth URL configuration:
-  - Site URL: `http://localhost:5173`
+  - Site URL: `https://mtcmglassworkstation.com`
   - Redirect URLs:
+    - `https://mtcmglassworkstation.com/auth/callback`
+    - `https://mtcmglassworkstation.com/ops/login`
+    - `https://mtcmglassworkstation.com/workstation`
     - `http://localhost:5173`
-    - `http://localhost:5173/`
-    - `https://xgsiljjbyoeuiyiclhtp.supabase.co/auth/v1/callback`
+    - `http://localhost:5173/auth/callback`
   - Wildcard/pattern rules: none confirmed (captured entries are exact URLs)
-- Approved production-parity auth URL target (pending dashboard apply):
+- Applied production-parity auth URL target:
   - Canonical production domain: `mtcmglassworkstation.com`
-  - Site URL to set: `https://mtcmglassworkstation.com`
+  - Site URL: `https://mtcmglassworkstation.com`
   - Redirect URLs to keep:
     - `https://mtcmglassworkstation.com/auth/callback`
     - `https://mtcmglassworkstation.com/ops/login`
@@ -141,7 +143,7 @@ Items likely managed outside repo migrations/functions/config:
 |---|---|---|---|
 | Workstation core app/data | Partial, with legacy overlays | Primary repo-aligned ownership | Preserve target as core truth |
 | Public intake + external integrations | Primary live truth (broader function/policy surface) | Not fully present yet | Selectively import required production integrations |
-| Auth providers + URL config | Email/Google/Zoom active + production redirect set | Email/Google/Zoom + GitHub active + local/dev redirect set | Provider enablement mostly aligned, but URL config is not aligned and blocks safe cutover |
+| Auth providers + URL config | Email/Google/Zoom active + production redirect set | Email/Google/Zoom + GitHub active + canonical production redirect set | App auth is now aligned enough to remove baseline login as blocker; provider compatibility still must be maintained |
 | Storage | Public-service buckets present | Repo-aligned workstation buckets present | Preserve target buckets; import missing public-service buckets if required |
 | DotMail/Gmail operations | Broadly present in source | Partially present (`send-emails`) | Import missing Gmail/DotMail operational stack as needed |
 
@@ -171,43 +173,35 @@ Items likely managed outside repo migrations/functions/config:
 
 ### Auth blockers (updated)
 
-- Provider enablement list is **not** the primary blocker now:
-  - Email/Google/Zoom parity exists
-  - GitHub is an additional target-only provider (not a direct cutover blocker by itself)
-- Auth URL configuration is **not aligned**:
-  - Target Site URL remains local/dev: `http://localhost:5173`
-  - Target redirect set remains local-only plus Supabase callback
-  - Source redirect set already contains production web/app callback/login/workstation paths
-- Wildcard/pattern rules:
-  - No wildcard redirect patterns confirmed in captured source/target facts (exact URL entries shown)
-- Safe production cutover is **blocked** until target Site URL and redirect URLs are updated to production parity, then re-verified with provider client/callback config.
-- Dashboard-safe remediation order in target (`mtcm-workstation`):
-  1. Set Site URL to `https://mtcmglassworkstation.com`
-  2. Add redirect keep-list:
-     - `https://mtcmglassworkstation.com/auth/callback`
-     - `https://mtcmglassworkstation.com/ops/login`
-     - `https://mtcmglassworkstation.com/workstation`
-     - `http://localhost:5173`
-     - `http://localhost:5173/auth/callback`
-  3. Save changes
-  4. Keep old `www` redirects for now if production may still use them
-  5. Remove `www` redirects only after cutover verification + clean traffic confirmation
-- Required manual validation immediately after auth URL update:
-  - normal login
-  - Google login
-  - logout and return
-  - direct hit to `/workstation`
-  - direct hit to `/ops/login`
-- Provider parity caution:
-  - Google/GitHub/Zoom provider app configs in target must allow the same production domain/callback pattern or auth can still fail.
+- **Confirmed resolved for general app auth**:
+  - App sign-in succeeds after auth URL remediation in target.
+  - This confirms Supabase Auth provider/redirect remediation is working for app login paths.
+- **Critical distinction**:
+  - App auth success and DotMail Gmail "Connect Gmail" success are separate parity concerns.
+  - Current blocker is DotMail Gmail integration parity, not baseline app login parity.
+- Provider parity caution still applies:
+  - Google/GitHub/Zoom provider app configs in target must remain compatible with `https://mtcmglassworkstation.com` callback/client settings.
 
 ### High-risk non-auth blockers
 
-- Missing target parity evidence for Resend/DotMail runtime
-- Missing target parity evidence for Gmail OAuth/send/sync runtime
+- **DotMail Gmail integration parity is currently blocked**:
+  - DotMail "Connect Gmail" still fails in target.
+  - Most likely because source Gmail/DotMail function stack is not deployed in target.
+- Confirmed source-only deployed Gmail/DotMail functions not shown in target deploy list:
+  - `gmail-oauth`
+  - `gmail-send`
+  - `gmail-sync`
+  - `dotmail-gmail-classifier`
+- Missing target parity evidence for supporting Gmail/DotMail runtime categories (names/presence only; no values)
 - Missing target parity evidence for SAM.gov runtime
 - Missing target parity evidence for Stripe/Twilio/Slack runtime dependencies
 - Missing target parity evidence for source public-service buckets/functions/policies that power live public flows
+
+### Why app sign-in can work while DotMail Gmail still fails
+
+- App sign-in is handled by Supabase Auth provider + redirect configuration and can pass once Site URL/redirect/callback settings are correct.
+- DotMail "Connect Gmail" depends on a separate Gmail OAuth integration stack (dedicated functions + related runtime configuration + callback wiring).
+- Therefore auth URL remediation can fix app login without fixing DotMail Gmail connect if Gmail integration functions/runtime are absent or misconfigured in target.
 
 ## 11. Exact Cutover Prerequisites Checklist (migration-safe)
 
@@ -215,11 +209,12 @@ Items likely managed outside repo migrations/functions/config:
    - [x] Site URL captured and compared
    - [x] Redirect URLs / allowed redirect patterns captured and compared
    - [ ] Source Site URL captured explicitly (still missing from confirmed snapshot)
-   - [ ] Target Site URL updated to `https://mtcmglassworkstation.com`
-   - [ ] Target redirect keep-list added (3 prod + 2 localhost URLs)
+   - [x] Target Site URL updated to `https://mtcmglassworkstation.com`
+   - [x] Target redirect keep-list added (3 prod + 2 localhost URLs)
    - [ ] Temporary `www` redirects retained until cutover is verified and traffic is clean
    - [ ] Google/GitHub/Zoom callback config parity confirmed against canonical/non-www domain
-   - [ ] Post-change auth validation passed (normal login, Google login, logout/return, `/workstation`, `/ops/login`)
+   - [x] Post-change baseline app sign-in validation passed after auth URL remediation
+   - [ ] Full auth path validation passed (normal login, Google login, logout/return, `/workstation`, `/ops/login`)
 2. **Secrets category parity (names/presence only; no values)**
    - [ ] Supabase runtime parity confirmed
    - [ ] Resend/DotMail, Gmail, SAM.gov, Stripe, Twilio, Slack, Plausible, site/donation categories classified as migrate/verify/retire
@@ -238,18 +233,55 @@ Items likely managed outside repo migrations/functions/config:
    - [ ] Capability/public intake/integration workflows pass smoke checks
    - [ ] No blocker-class parity drifts remain open
 
+7. **DotMail Gmail parity gate (separate from app auth)**
+   - [ ] Source Gmail/DotMail function responsibility mapped to target (`gmail-oauth`, `gmail-send`, `gmail-sync`, `dotmail-gmail-classifier`)
+   - [ ] Required Gmail/DotMail functions present in target deployed function list
+   - [ ] Required Gmail/DotMail runtime secret categories present in target (names/presence only; no values)
+   - [ ] DotMail "Connect Gmail" callback/client settings confirmed against canonical domain
+   - [ ] DotMail "Connect Gmail" succeeds end-to-end in target
+
 ## 12. Updated Migration Priority Order
 
-1. **URL config diff**  
-   - Completed enough to conclude misalignment: target is still local/dev; source includes production redirect set.
-2. **Old vs new function responsibility diff (DotMail/Gmail/public intake/capability)**  
-   - Determine exact source-only functions that must be retained or ported to target.
-3. **Bucket policy diff**  
-   - Compare required bucket-level policy behavior for any retained production flows.
+1. **Auth URL parity + app sign-in validation**  
+   - Completed enough to remove app auth as current blocker (app sign-in now works after remediation).
+2. **DotMail Gmail parity (current blocked cutover item)**  
+   - Separate from app auth; resolve Gmail-connect stack parity first.
+   - Confirm required source Gmail/DotMail functions are present/deployed in target:
+     - `gmail-oauth`, `gmail-send`, `gmail-sync`, `dotmail-gmail-classifier`
+3. **Old vs new function responsibility diff (remaining integrations/public intake/capability)**  
+   - Determine exact additional source-only functions that must be retained or ported to target.
 4. **Secret presence classification**  
-   - Classify presence/parity for runtime categories (names only; no secret values).
-5. **Actual migration planning**  
+   - Classify presence/parity for runtime categories (names only; no secret values), with dedicated DotMail/Gmail focus first.
+5. **Bucket policy diff**  
+   - Compare required bucket-level policy behavior for retained production flows.
+6. **Actual migration planning**  
    - Plan/execute only after blocker-class parity drifts are closed.
+
+## 13. Exact Next Manual Checks (secrets/functions/callbacks)
+
+1. **Secrets presence checks (names only; no values)**
+   - Verify target has required Gmail/DotMail integration secret categories present for:
+     - Gmail OAuth client/integration runtime
+     - DotMail Gmail connect/send/sync runtime
+   - Record presence/missing status only in worksheets; do not copy secret values.
+
+2. **Deployed function checks**
+   - In target deployed function list, confirm presence/absence for:
+     - `gmail-oauth`
+     - `gmail-send`
+     - `gmail-sync`
+     - `dotmail-gmail-classifier`
+   - Mark each as required/optional for cutover and assign remediation owner.
+
+3. **Callback/client compatibility checks**
+   - Confirm OAuth callback/client settings for Google/GitHub/Zoom remain compatible with:
+     - `https://mtcmglassworkstation.com`
+   - For DotMail Gmail connect specifically, confirm callback URI and client project alignment point to the target/canonical production domain flow.
+
+4. **Functional validation checks**
+   - Re-validate app auth baseline (email + Google login) to confirm no regression.
+   - Run DotMail "Connect Gmail" and capture exact error text and failing step.
+   - Track as DotMail Gmail parity blocker until connect succeeds in target.
 
 Control rules for this phase:
 
