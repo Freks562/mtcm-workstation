@@ -5,9 +5,11 @@ const PROJECT_REF = 'qvtujdcnzmmdcyxctggb'
 const REDIRECT_URI = `https://${PROJECT_REF}.supabase.co/functions/v1/gmail-oauth/callback`
 const START_PATH = '/functions/v1'
 const STATE_COOKIE = 'gmail_oauth_state'
+const STATE_COOKIE_MAX_AGE_SECONDS = 600
 const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.send'
 const APP_DOTMAIL_URL = 'https://www.mtcmglassworkstation.com/ops/dotmail'
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token'
+const TOKEN_EXPIRY_BUFFER_SECONDS = 60
 const SUCCESS_REDIRECT = `${APP_DOTMAIL_URL}?gmail_connected=true`
 const TOKEN_EXCHANGE_FAILURE_REDIRECT =
   `${APP_DOTMAIL_URL}?gmail_connected=false&error=token_exchange_failed`
@@ -48,7 +50,7 @@ function startOAuth(req: Request, url: URL) {
     status: 302,
     headers: {
       Location: authUrl.toString(),
-      'Set-Cookie': `${STATE_COOKIE}=${nonce}; Path=${START_PATH}; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+      'Set-Cookie': `${STATE_COOKIE}=${nonce}; Path=${START_PATH}; HttpOnly; Secure; SameSite=Lax; Max-Age=${STATE_COOKIE_MAX_AGE_SECONDS}`,
     },
   })
 }
@@ -105,7 +107,9 @@ async function handleCallback(req: Request, url: URL) {
 
   const userId = decodedState.userId
   const expiresAt = tokenData.expires_in
-    ? new Date(Date.now() + Math.max(0, Number(tokenData.expires_in) - 60) * 1000).toISOString()
+    ? new Date(
+      Date.now() + Math.max(0, Number(tokenData.expires_in) - TOKEN_EXPIRY_BUFFER_SECONDS) * 1000
+    ).toISOString()
     : null
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -170,8 +174,9 @@ function encodeState(payload: { nonce: string; userId: string | null }) {
 function decodeState(state: string): { nonce: string; userId: string | null } | null {
   try {
     const parsed = JSON.parse(fromBase64Url(state))
+    if (typeof parsed?.nonce !== 'string' || !parsed.nonce) return null
     return {
-      nonce: typeof parsed?.nonce === 'string' ? parsed.nonce : '',
+      nonce: parsed.nonce,
       userId: typeof parsed?.userId === 'string' ? parsed.userId : null,
     }
   } catch (_) {
