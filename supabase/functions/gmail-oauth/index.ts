@@ -103,7 +103,7 @@ async function handleCallback(req: Request, url: URL) {
     return Response.redirect(TOKEN_EXCHANGE_FAILURE_REDIRECT, 302)
   }
 
-  const userId = decodedState.userId ?? extractUserIdFromAuthHeader(req.headers.get('authorization'))
+  const userId = decodedState.userId
   const expiresAt = tokenData.expires_in
     ? new Date(Date.now() + Math.max(0, Number(tokenData.expires_in) - 60) * 1000).toISOString()
     : null
@@ -242,6 +242,7 @@ async function upsertMailAccountIfExists(
 
   if (isMissingTableError(upsertResult.error.code)) return
 
+  // Fallback handles schemas that only enforce user-level uniqueness for mailbox records.
   const fallbackUpsert = await supabase.from('mail_accounts').upsert(accountRow, { onConflict: 'user_id' })
   if (fallbackUpsert.error) {
     console.error('mail_accounts fallback upsert failed', fallbackUpsert.error)

@@ -34,6 +34,9 @@ const GMAIL_OAUTH_START_URL =
 export default function DotmailPage() {
   const { session } = useAuth()
   const actorId = session?.user?.id ?? null
+  const gmailOAuthStartHref = actorId
+    ? `${GMAIL_OAUTH_START_URL}?user_id=${encodeURIComponent(actorId)}`
+    : GMAIL_OAUTH_START_URL
 
   const [tab, setTab] = useState('templates')
   const [templateModal, setTemplateModal] = useState(null)   // null | 'new' | template obj
@@ -119,7 +122,7 @@ export default function DotmailPage() {
         <h1 className="text-xl font-semibold text-gray-900">DotMail</h1>
         <div className="flex items-center gap-2">
           <a
-            href={GMAIL_OAUTH_START_URL}
+            href={gmailOAuthStartHref}
             className="rounded border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             Connect Gmail
