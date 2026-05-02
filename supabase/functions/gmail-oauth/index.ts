@@ -105,7 +105,7 @@ async function handleCallback(req: Request, url: URL) {
 
   const userId = decodedState.userId ?? extractUserIdFromAuthHeader(req.headers.get('authorization'))
   const expiresAt = tokenData.expires_in
-    ? new Date(Date.now() + Number(tokenData.expires_in) * 1000).toISOString()
+    ? new Date(Date.now() + Math.max(0, Number(tokenData.expires_in) - 60) * 1000).toISOString()
     : null
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -242,9 +242,13 @@ async function upsertMailAccountIfExists(
 
   if (isMissingTableError(upsertResult.error.code)) return
 
-  await supabase.from('mail_accounts').upsert(accountRow, { onConflict: 'user_id' })
+  const fallbackUpsert = await supabase.from('mail_accounts').upsert(accountRow, { onConflict: 'user_id' })
+  if (fallbackUpsert.error) {
+    console.error('mail_accounts fallback upsert failed', fallbackUpsert.error)
+  }
 }
 
 function isMissingTableError(code?: string) {
+  // 42P01 = PostgreSQL undefined_table, PGRST205 = PostgREST relation not found.
   return code === '42P01' || code === 'PGRST205'
 }
