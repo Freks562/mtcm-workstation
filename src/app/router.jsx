@@ -27,7 +27,7 @@ export function AppRouter() {
             <Route path="/ops/dotmail" element={<DotmailPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/freksframe" element={<FreksFramePage />} />
-            <Route path="/glass" element={<FreksFramePage />} />
+            <Route path="/glass" element={<CommandCenterPage />} />
             <Route path="/va-opportunities" element={<VaOpportunitiesPage />} />
             <Route path="/vetrights" element={<VetRightsPage />} />
           </Route>
