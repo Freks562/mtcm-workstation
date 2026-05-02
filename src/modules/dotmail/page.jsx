@@ -118,12 +118,12 @@ export default function DotmailPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900">DotMail</h1>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => { window.location.href = GMAIL_OAUTH_START_URL }}
+          <a
+            href={GMAIL_OAUTH_START_URL}
             className="rounded border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             Connect Gmail
-          </button>
+          </a>
           {tab === 'templates' && (
             <button
               onClick={() => setTemplateModal('new')}
