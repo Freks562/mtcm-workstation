@@ -106,6 +106,11 @@ async function handleCallback(req: Request, url: URL) {
   }
 
   const userId = decodedState.userId
+  if (!userId) {
+    console.error('gmail_oauth token exchange success but user_id missing in state')
+    return Response.redirect(TOKEN_EXCHANGE_FAILURE_REDIRECT, 302)
+  }
+
   const expiresAt = tokenData.expires_in
     ? new Date(
       Date.now() + Math.max(0, Number(tokenData.expires_in) - TOKEN_EXPIRY_BUFFER_SECONDS) * 1000
@@ -120,41 +125,82 @@ async function handleCallback(req: Request, url: URL) {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } })
   console.log('gmail_oauth token exchange success', {
-    user_id: userId ?? null,
+    user_id: userId,
     has_access_token: Boolean(tokenData.access_token),
     has_refresh_token: Boolean(tokenData.refresh_token),
     expires_in: tokenData.expires_in ?? null,
     scope_present: Boolean(tokenData.scope),
   })
 
-  const gmailTokenColumns = await getPublicTableColumns(supabase, 'gmail_tokens')
-  if (!gmailTokenColumns || gmailTokenColumns.size === 0) {
-    console.error('gmail_oauth gmail_tokens schema read failed or table has no visible columns')
+  const existingMailAccount = await supabase
+    .from('mail_accounts')
+    .select('id, refresh_token')
+    .eq('user_id', userId)
+    .eq('provider', 'gmail')
+    .eq('provider_account_id', 'primary')
+    .maybeSingle()
+
+  if (existingMailAccount.error) {
+    console.error('gmail_oauth mail_accounts read error', existingMailAccount.error)
     return Response.redirect(TOKEN_EXCHANGE_FAILURE_REDIRECT, 302)
   }
-  console.log('gmail_oauth gmail_tokens schema', { columns: Array.from(gmailTokenColumns) })
 
-  const tokenWrite = await writeGmailTokens(supabase, gmailTokenColumns, {
-    userId,
-    accessToken: tokenData.access_token,
-    refreshToken: tokenData.refresh_token ?? null,
-    expiresAt,
-    scope: tokenData.scope ?? null,
-    tokenType: tokenData.token_type ?? null,
+  const refreshToken = tokenData.refresh_token ?? existingMailAccount.data?.refresh_token ?? null
+
+  const mailAccountUpsert = await supabase
+    .from('mail_accounts')
+    .upsert({
+      user_id: userId,
+      provider: 'gmail',
+      provider_account_id: 'primary',
+      access_token: tokenData.access_token,
+      refresh_token: refreshToken,
+      expires_at: expiresAt,
+      scope: tokenData.scope ?? null,
+      token_type: tokenData.token_type ?? null,
+      status: 'connected',
+    }, {
+      onConflict: 'user_id,provider,provider_account_id',
+    })
+    .select('id')
+    .single()
+
+  if (mailAccountUpsert.error) {
+    console.error('gmail_oauth mail_accounts upsert error', mailAccountUpsert.error)
+    return Response.redirect(TOKEN_EXCHANGE_FAILURE_REDIRECT, 302)
+  }
+  console.log('gmail_oauth mail_accounts upsert response', {
+    mail_account_id: mailAccountUpsert.data.id,
+    user_id: userId,
+    provider: 'gmail',
   })
-  if (tokenWrite.error) {
-    console.error('gmail_oauth gmail_tokens upsert error', tokenWrite.error)
+
+  const gmailTokensUpsert = await supabase
+    .from('gmail_tokens')
+    .upsert({
+      mail_account_id: mailAccountUpsert.data.id,
+      user_id: userId,
+      provider: 'gmail',
+      access_token: tokenData.access_token,
+      refresh_token: refreshToken,
+      expires_at: expiresAt,
+      scope: tokenData.scope ?? null,
+      token_type: tokenData.token_type ?? null,
+    }, {
+      onConflict: 'user_id,provider',
+    })
+    .select('id')
+    .single()
+
+  if (gmailTokensUpsert.error) {
+    console.error('gmail_oauth gmail_tokens upsert error', gmailTokensUpsert.error)
     return Response.redirect(TOKEN_EXCHANGE_FAILURE_REDIRECT, 302)
   }
-  console.log('gmail_oauth gmail_tokens upsert response', tokenWrite.response)
-
-  await upsertMailAccountIfExists(supabase, {
-    userId,
-    accessToken: tokenData.access_token,
-    refreshToken: tokenData.refresh_token ?? null,
-    expiresAt,
-    scope: tokenData.scope ?? null,
-    tokenType: tokenData.token_type ?? null,
+  console.log('gmail_oauth gmail_tokens upsert response', {
+    gmail_token_id: gmailTokensUpsert.data.id,
+    mail_account_id: mailAccountUpsert.data.id,
+    user_id: userId,
+    provider: 'gmail',
   })
 
   return Response.redirect(SUCCESS_REDIRECT, 302)
@@ -215,219 +261,4 @@ function extractUserIdFromAuthHeader(authorization: string | null): string | nul
   } catch (_) {
     return null
   }
-}
-
-async function upsertMailAccountIfExists(
-  supabase: ReturnType<typeof createClient>,
-  {
-    userId,
-    accessToken,
-    refreshToken,
-    expiresAt,
-    scope,
-    tokenType,
-  }: {
-    userId: string | null
-    accessToken: string
-    refreshToken: string | null
-    expiresAt: string | null
-    scope: string | null
-    tokenType: string | null
-  }
-) {
-  if (!userId) return
-
-  const columns = await getPublicTableColumns(supabase, 'mail_accounts')
-  if (!columns || columns.size === 0) return
-  console.log('gmail_oauth mail_accounts schema', { columns: Array.from(columns) })
-
-  const accountRow = mapColumns(columns, {
-    user_id: userId,
-    owner_id: userId,
-    profile_id: userId,
-    provider: 'gmail',
-    account_type: 'gmail',
-    access_token: accessToken,
-    refresh_token: refreshToken,
-    expires_at: expiresAt,
-    token_expires_at: expiresAt,
-    scope,
-    scopes: scope,
-    token_type: tokenType,
-    status: 'connected',
-    connected: true,
-    is_connected: true,
-    updated_at: new Date().toISOString(),
-  })
-
-  if (Object.keys(accountRow).length === 0) return
-
-  const upsertResult = await supabase
-    .from('mail_accounts')
-    .upsert(accountRow, { onConflict: 'user_id,provider' })
-
-  if (!upsertResult.error) {
-    console.log('gmail_oauth mail_accounts upsert response', upsertResult)
-    return
-  }
-
-  console.error('gmail_oauth mail_accounts upsert error', upsertResult.error)
-
-  if (isMissingTableError(upsertResult.error.code)) return
-
-  // Fallback handles schemas that only enforce user-level uniqueness for mailbox records.
-  const fallbackUpsert = await supabase.from('mail_accounts').upsert(accountRow, { onConflict: 'user_id' })
-  if (fallbackUpsert.error) {
-    console.error('mail_accounts fallback upsert failed', fallbackUpsert.error)
-  } else {
-    console.log('gmail_oauth mail_accounts fallback upsert response', fallbackUpsert)
-  }
-}
-
-function isMissingTableError(code?: string) {
-  // 42P01 = PostgreSQL undefined_table, PGRST205 = PostgREST relation not found.
-  return code === '42P01' || code === 'PGRST205'
-}
-
-async function getPublicTableColumns(
-  supabase: ReturnType<typeof createClient>,
-  tableName: string
-): Promise<Set<string> | null> {
-  const { data, error } = await supabase
-    .from('information_schema.columns')
-    .select('column_name')
-    .eq('table_schema', 'public')
-    .eq('table_name', tableName)
-
-  if (error) {
-    console.error(`gmail_oauth ${tableName} schema read error`, error)
-    const fallback = getFallbackColumns(tableName)
-    if (fallback) {
-      console.log(`gmail_oauth using fallback columns for ${tableName}`, { columns: Array.from(fallback) })
-      return fallback
-    }
-    return null
-  }
-
-  const columns = new Set((data ?? []).map((row) => row.column_name as string))
-  if (columns.size === 0) {
-    const fallback = getFallbackColumns(tableName)
-    if (fallback) {
-      console.log(`gmail_oauth using fallback columns for ${tableName}`, { columns: Array.from(fallback) })
-      return fallback
-    }
-  }
-
-  return columns
-}
-
-function mapColumns(
-  columns: Set<string>,
-  values: Record<string, unknown>
-): Record<string, unknown> {
-  const mapped: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(values)) {
-    if (!columns.has(key)) continue
-    if (value === undefined) continue
-    mapped[key] = value
-  }
-  return mapped
-}
-
-async function writeGmailTokens(
-  supabase: ReturnType<typeof createClient>,
-  columns: Set<string>,
-  {
-    userId,
-    accessToken,
-    refreshToken,
-    expiresAt,
-    scope,
-    tokenType,
-  }: {
-    userId: string | null
-    accessToken: string
-    refreshToken: string | null
-    expiresAt: string | null
-    scope: string | null
-    tokenType: string | null
-  }
-) {
-  const tokenRow = mapColumns(columns, {
-    user_id: userId,
-    owner_id: userId,
-    profile_id: userId,
-    provider: 'gmail',
-    access_token: accessToken,
-    gmail_access_token: accessToken,
-    token: accessToken,
-    refresh_token: refreshToken,
-    gmail_refresh_token: refreshToken,
-    expires_at: expiresAt,
-    token_expires_at: expiresAt,
-    scope,
-    scopes: scope,
-    token_type: tokenType,
-    type: tokenType,
-    updated_at: new Date().toISOString(),
-  })
-
-  if (!hasAny(columns, ['access_token', 'gmail_access_token', 'token'])) {
-    return { response: null, error: { message: 'No access token column found in gmail_tokens' } }
-  }
-
-  if (Object.keys(tokenRow).length === 0) {
-    return { response: null, error: { message: 'No compatible columns found in gmail_tokens' } }
-  }
-
-  const conflictTargets = [
-    'user_id,provider',
-    'user_id',
-    'owner_id,provider',
-    'owner_id',
-    'profile_id,provider',
-    'profile_id',
-  ]
-
-  if (userId) {
-    for (const target of conflictTargets) {
-      if (!target.split(',').every((column) => columns.has(column))) continue
-      const response = await supabase.from('gmail_tokens').upsert(tokenRow, { onConflict: target })
-      if (!response.error) return { response, error: null }
-      if (!isRetryableConflictError(response.error.code)) {
-        return { response, error: response.error }
-      }
-    }
-  }
-
-  const response = await supabase.from('gmail_tokens').insert(tokenRow)
-  return { response, error: response.error ?? null }
-}
-
-function hasAny(columns: Set<string>, names: string[]) {
-  return names.some((name) => columns.has(name))
-}
-
-function isRetryableConflictError(code?: string) {
-  // 42P10 = invalid_column_reference (often conflict target mismatch), PGRST204/205 = schema cache/relation metadata mismatch.
-  return code === '42P10' || code === 'PGRST204' || code === 'PGRST205'
-}
-
-function getFallbackColumns(tableName: string): Set<string> | null {
-  if (tableName === 'gmail_tokens') {
-    return new Set(['user_id', 'access_token', 'refresh_token', 'expires_at', 'scope', 'token_type'])
-  }
-  if (tableName === 'mail_accounts') {
-    return new Set([
-      'user_id',
-      'provider',
-      'access_token',
-      'refresh_token',
-      'expires_at',
-      'scope',
-      'token_type',
-      'status',
-    ])
-  }
-  return null
 }
