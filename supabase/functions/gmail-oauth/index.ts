@@ -125,7 +125,6 @@ async function handleCallback(req: Request, url: URL) {
     has_refresh_token: Boolean(tokenData.refresh_token),
     expires_in: tokenData.expires_in ?? null,
     scope_present: Boolean(tokenData.scope),
-    token_type: tokenData.token_type ?? null,
   })
 
   const gmailTokenColumns = await getPublicTableColumns(supabase, 'gmail_tokens')
@@ -410,6 +409,7 @@ function hasAny(columns: Set<string>, names: string[]) {
 }
 
 function isRetryableConflictError(code?: string) {
+  // 42P10 = invalid_column_reference (often conflict target mismatch), PGRST204/205 = schema cache/relation metadata mismatch.
   return code === '42P10' || code === 'PGRST204' || code === 'PGRST205'
 }
 
