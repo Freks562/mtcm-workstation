@@ -28,6 +28,9 @@ const EMAIL_STATUS_BADGE = {
   clicked: 'bg-indigo-100 text-indigo-700',
 }
 
+const GMAIL_OAUTH_START_URL =
+  'https://qvtujdcnzmmdcyxctggb.supabase.co/functions/v1/gmail-oauth'
+
 export default function DotmailPage() {
   const { session } = useAuth()
   const actorId = session?.user?.id ?? null
@@ -114,22 +117,30 @@ export default function DotmailPage() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900">DotMail</h1>
-        {tab === 'templates' && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setTemplateModal('new')}
-            className="rounded bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+            onClick={() => { window.location.href = GMAIL_OAUTH_START_URL }}
+            className="rounded border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
-            + New Template
+            Connect Gmail
           </button>
-        )}
-        {tab === 'campaigns' && (
-          <button
-            onClick={() => setCampaignModal('new')}
-            className="rounded bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
-          >
-            + New Campaign
-          </button>
-        )}
+          {tab === 'templates' && (
+            <button
+              onClick={() => setTemplateModal('new')}
+              className="rounded bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+            >
+              + New Template
+            </button>
+          )}
+          {tab === 'campaigns' && (
+            <button
+              onClick={() => setCampaignModal('new')}
+              className="rounded bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+            >
+              + New Campaign
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
